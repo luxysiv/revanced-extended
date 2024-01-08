@@ -9,17 +9,17 @@ $repositories = @{
 }
 
 foreach ($repo in $repositories.Keys) {
-    $response = Invoke-RestMethod -Uri "https://api.github.com/repos/$($repositories[$repo])/releases/latest" -InformationAction Continue
+    $response = Invoke-RestMethod -Uri "https://api.github.com/repos/$($repositories[$repo])/releases/latest" -Debug
 
     $assetUrls = $response.assets | Where-Object { $_.name -match $repo } | ForEach-Object { "$($_.browser_download_url) $($_.name)" }
 
     foreach ($url in $assetUrls) {
         $urlParts = $url -split ' '
-        Invoke-WebRequest -Uri $urlParts[0] -OutFile $urlParts[1] -UseBasicParsing -InformationAction Continue
+        Invoke-WebRequest -Uri $urlParts[0] -OutFile $urlParts[1] -UseBasicParsing -Debug
     }
 }
 
-Invoke-WebRequest -Uri "$($ytUrl -replace '0$', '1')" -OutFile "youtube-v$version.apk" -UseBasicParsing -InformationAction Continue
+Invoke-WebRequest -Uri "$($ytUrl -replace '0$', '1')" -OutFile "youtube-v$version.apk" -UseBasicParsing -Debug
 
 $lines = Get-Content -Path .\patches.txt
 
@@ -64,8 +64,8 @@ if ($highestSupportedVersion -eq $version) {
     Add-Content -Path .\version.txt -Value "Supported version is $highestSupportedVersion, Pls update!"
 }
 
-git config --global user.email "$env:GITHUB_ACTOR_ID+$env:GITHUB_ACTOR@users.noreply.github.com" > $null
-git config --global user.name "$((gh api "/users/$env:GITHUB_ACTOR" | ConvertFrom-Json).name)" > $null
-git add version.txt > $null
-git commit -m "Update version" --author=. > $null
-git push origin main > $null
+git config --global user.email "$env:GITHUB_ACTOR_ID+$env:GITHUB_ACTOR@users.noreply.github.com" -Debug
+git config --global user.name "$((gh api "/users/$env:GITHUB_ACTOR" | ConvertFrom-Json).name)" -Debug
+git add version.txt -Debug
+git commit -m "Update version" --author=. -Debug
+git push origin main -Debug
