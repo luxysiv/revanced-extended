@@ -27,20 +27,12 @@ jobs:
         .\build.ps1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
-    - name: Generate release info
-      run: | 
-        echo "
-        **Patches Changelog:** :point_down:
-        [Revanced](https://github.com/revanced/revanced-patches/releases/latest)
-        "> ${{ github.workspace }}-CHANGELOG.txt
              
     - name: Release
       uses: softprops/action-gh-release@v0.1.15
       with:
         files: youtube-revanced*.apk 
         tag_name: latest
-        body_path: ${{ github.workspace }}-CHANGELOG.txt
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   
 
