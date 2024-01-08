@@ -1,16 +1,20 @@
-name: Patch YouTube APK
+name: Patch Revanced 
+
 on:
   push:
   schedule:
     - cron: "0 10 * * *"
   workflow_dispatch:
+    
 jobs:
-  patch:
-    name: Patch YouTube
+  build:
+    name: Patch YouTube 
     permissions: write-all
     runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v4
+    - name: Checkout Repository
+      uses: actions/checkout@v4
 
     - name: Set up JDK
       uses: actions/setup-java@v3
