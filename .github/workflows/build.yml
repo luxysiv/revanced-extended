@@ -24,10 +24,9 @@ jobs:
     - name: Patch Revanced
       shell: pwsh
       run: |
-        .\main.ps1
+        .\build.ps1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GITHUB_REPOSITORY: ${{ github.repository }}
         
     - name: Generate release info
       run: | 
