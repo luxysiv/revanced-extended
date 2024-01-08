@@ -13,7 +13,7 @@ $repositories = @{
 
 # Download latest releases for specified repositories
 foreach ($repo in $repositories.Keys) {
-    $response = Invoke-RestMethod -Uri "https://api.github.com/repos/$($repositories[$repo])/releases/latest" -Verbose
+    $response = Invoke-RestMethod -Uri "https://api.github.com/repos/$($repositories[$repo])/releases/latest"
 
     $assetUrls = $response.assets | Where-Object { $_.name -match $repo } | ForEach-Object { "$($_.browser_download_url) $($_.name)" }
 
