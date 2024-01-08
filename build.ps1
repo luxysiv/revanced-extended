@@ -13,18 +13,18 @@ $repositories = @{
 
 # Download latest releases for specified repositories
 foreach ($repo in $repositories.Keys) {
-    $response = Invoke-RestMethod -Uri "https://api.github.com/repos/$($repositories[$repo])/releases/latest" -Debug
+    $response = Invoke-RestMethod -Uri "https://api.github.com/repos/$($repositories[$repo])/releases/latest" -Verbose
 
     $assetUrls = $response.assets | Where-Object { $_.name -match $repo } | ForEach-Object { "$($_.browser_download_url) $($_.name)" }
 
     foreach ($url in $assetUrls) {
         $urlParts = $url -split ' '
-        Invoke-WebRequest -Uri $urlParts[0] -OutFile $urlParts[1] -UseBasicParsing -Debug
+        Invoke-WebRequest -Uri $urlParts[0] -OutFile $urlParts[1] -UseBasicParsing -Verbose
     }
 }
 
 # Download YouTube APK
-Invoke-WebRequest -Uri "$($ytUrl -replace '0$', '1')" -OutFile "youtube-v$version.apk" -UseBasicParsing -Debug
+Invoke-WebRequest -Uri "$($ytUrl -replace '0$', '1')" -OutFile "youtube-v$version.apk" -UseBasicParsing -Verbose
 
 # Read patches from file
 $lines = Get-Content -Path .\patches.txt
