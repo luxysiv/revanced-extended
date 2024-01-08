@@ -13,18 +13,23 @@ $repositories = @{
 
 # Download latest releases for specified repositories
 foreach ($repo in $repositories.Keys) {
-    $response = Invoke-RestMethod -Uri "https://api.github.com/repos/$($repositories[$repo])/releases/latest" -Verbose
+    $repoApiUrl = "https://api.github.com/repos/$($repositories[$repo])/releases/latest"
+    Write-Host "Downloading latest release from: $repoApiUrl" -ForegroundColor Cyan
+    $response = Invoke-RestMethod -Uri $repoApiUrl -Verbose
 
     $assetUrls = $response.assets | Where-Object { $_.name -match $repo } | ForEach-Object { "$($_.browser_download_url) $($_.name)" }
 
     foreach ($url in $assetUrls) {
         $urlParts = $url -split ' '
+        Write-Host "Downloading asset: $($urlParts[1]) from: $($urlParts[0])" -ForegroundColor Cyan
         Invoke-WebRequest -Uri $urlParts[0] -OutFile $urlParts[1] -UseBasicParsing -Verbose
     }
 }
 
 # Download YouTube APK
-Invoke-WebRequest -Uri "$($ytUrl -replace '0$', '1')" -OutFile "youtube-v$version.apk" -UseBasicParsing -Verbose
+$youtubeDownloadUrl = "$($ytUrl -replace '0$', '1')"
+Write-Host "Downloading YouTube APK from: $youtubeDownloadUrl" -ForegroundColor Cyan
+Invoke-WebRequest -Uri $youtubeDownloadUrl -OutFile "youtube-v$version.apk" -UseBasicParsing -Verbose
 
 # Read patches from file
 $lines = Get-Content -Path .\patches.txt
