@@ -1,3 +1,8 @@
+# Function to display download notification
+function ShowDownloadNotification($fileName) {
+    Write-Host "Downloading $fileName..."
+}
+
 # Dropbox YouTube URL
 $ytUrl = "https://www.dropbox.com/scl/fi/wqnuqe65xd0bxn3ed2ous/com.google.android.youtube_18.45.43-1541152192_minAPI26-arm64-v8a-armeabi-v7a-x86-x86_64-nodpi-_apkmirror.com.apk?rlkey=fkujhctrb1dko978htdl0r9bi&dl=0"
 
@@ -15,7 +20,10 @@ $repositories = @{
 foreach ($repo in $repositories.Keys) {
     $response = Invoke-RestMethod -Uri "https://api.github.com/repos/$($repositories[$repo])/releases/latest"
 
-    $assetUrls = $response.assets | Where-Object { $_.name -match $repo } | ForEach-Object { "$($_.browser_download_url) $($_.name)" }
+    $assetUrls = $response.assets | Where-Object { $_.name -match $repo } | ForEach-Object {
+        ShowDownloadNotification $_.name
+        "$($_.browser_download_url) $($_.name)"
+    }
 
     foreach ($url in $assetUrls) {
         $urlParts = $url -split ' '
@@ -24,6 +32,7 @@ foreach ($repo in $repositories.Keys) {
 }
 
 # Download YouTube APK
+ShowDownloadNotification "youtube-v$version.apk"
 Invoke-WebRequest -Uri "$($ytUrl -replace '0$', '1')" -OutFile "youtube-v$version.apk" -UseBasicParsing
 
 # Read patches from file
