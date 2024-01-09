@@ -14,6 +14,7 @@ Function Download-WithProgress {
         $percentage = ($downloadedSize / $totalSize) * 100
         Write-Progress -Activity "Downloading" -Status "$($_.Length) bytes downloaded" -PercentComplete $percentage
         $_ | Out-File -FilePath $OutputPath -Append
+    }
 
     Write-Progress -Activity "Download Complete" -Status "100%"
 }
