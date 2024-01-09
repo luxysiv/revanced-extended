@@ -1,7 +1,7 @@
 **YouTube Revanced**
 
 **Latest release information**
-  - [Revanced](https://github.com/revanced/revanced-patches/releases/latest)
+  - [Revanced Extended](https://github.com/inotia00/revanced-patches/releases/latest)
 
 
 **Note**
