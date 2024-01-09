@@ -14,7 +14,7 @@ $repositories = @{
 # Download latest releases for specified repositories
 foreach ($repo in $repositories.Keys) {
     $repoApiUrl = "https://api.github.com/repos/$($repositories[$repo])/releases/latest"
-    Write-Host "Downloading latest release from: $repoApiUrl" -ForegroundColor Cyan
+    Write-Host "Downloading json latest release from: $repoApiUrl" -ForegroundColor Cyan
     $response = Invoke-RestMethod -Uri $repoApiUrl -Verbose
 
     $assetUrls = $response.assets | Where-Object { $_.name -match $repo } | ForEach-Object { "$($_.browser_download_url) $($_.name)" }
