@@ -1,5 +1,5 @@
 # Function for downloading with progress
-function Download-WithProgress {
+Function Download-WithProgress {
     param(
         [string]$Url,
         [string]$OutputPath
@@ -15,9 +15,9 @@ function Download-WithProgress {
         Write-Progress -Activity "Downloading" -Status "$($_.Length) bytes downloaded" -PercentComplete $percentage
     } | Out-File -FilePath $OutputPath -Append
 
-    Write-Progress -Activity "Download Complete" -Status "100% 
+    Write-Progress -Activity "Download Complete" -Status "100%"
 }
-    
+
 # Dropbox YouTube URL
 $ytUrl = "https://www.dropbox.com/scl/fi/wqnuqe65xd0bxn3ed2ous/com.google.android.youtube_18.45.43-1541152192_minAPI26-arm64-v8a-armeabi-v7a-x86-x86_64-nodpi-_apkmirror.com.apk?rlkey=fkujhctrb1dko978htdl0r9bi&dl=0"
 
@@ -34,7 +34,7 @@ $repositories = @{
 # Download latest releases for specified repositories
 foreach ($repo in $repositories.Keys) {
     $response = Invoke-RestMethod -Uri "https://api.github.com/repos/$($repositories[$repo])/releases/latest"
-
+    
     $assetUrls = $response.assets | Where-Object { $_.name -match $repo } | ForEach-Object {
         Download-WithProgress -Url $_.browser_download_url -OutputPath $_.name
     }
@@ -90,7 +90,7 @@ $highestSupportedVersion = [regex]::Matches($packageInfo, '\d+(\.\d+)+') | ForEa
 if ($highestSupportedVersion -eq $version) {
     Add-Content -Path .\version.txt -Value "Same $highestSupportedVersion version"
 } elseif ($highestSupportedVersion -ne $version) {
-    Add-Content -Path .\version.txt -Value "Supported version is $highestSupportedVersion, Pls update!"
+    Add-Content -Path .\version.txt -Value "Supported version is $highestSupportedVersion, Please update!"
 }
 
 # Upload version.txt to Github
