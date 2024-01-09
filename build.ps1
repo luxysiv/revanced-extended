@@ -1,8 +1,8 @@
 # Dropbox YouTube URL
-$yt_url = "https://www.dropbox.com/scl/fi/wqnuqe65xd0bxn3ed2ous/com.google.android.youtube_18.45.43-1541152192_minAPI26-arm64-v8a-armeabi-v7a-x86-x86_64-nodpi-_apkmirror.com.apk?rlkey=fkujhctrb1dko978htdl0r9bi&dl=0"
+$ytUrl = "https://www.dropbox.com/scl/fi/wqnuqe65xd0bxn3ed2ous/com.google.android.youtube_18.45.43-1541152192_minAPI26-arm64-v8a-armeabi-v7a-x86-x86_64-nodpi-_apkmirror.com.apk?rlkey=fkujhctrb1dko978htdl0r9bi&dl=0"
 
 # Take version from Dropbox link
-$version = [regex]::Match($yt_url, '\d+(\.\d+)+').Value
+$version = [regex]::Match($ytUrl, '\d+(\.\d+)+').Value
 
 # Declare repositories
 $repositories = @{
@@ -13,31 +13,38 @@ $repositories = @{
 
 # Download latest releases for specified repositories
 foreach ($repo in $repositories.Keys) {
-    $response = Invoke-WebRequest -Uri "https://api.github.com/repos/$($repositories[$repo])/releases/latest"
-    $asset_urls = $response.Content | ConvertFrom-Json | Where-Object { $_.name -like "*$repo*" } | Select-Object -Property browser_download_url, name
+    $repoApiUrl = "https://api.github.com/repos/$($repositories[$repo])/releases/latest"
+    $response = Invoke-RestMethod -Uri $repoApiUrl
 
-    foreach ($asset_url in $asset_urls) {
-        Invoke-WebRequest -Uri $asset_url.browser_download_url -OutFile $asset_url.name
+    $assetUrls = $response.assets | Where-Object { $_.name -match $repo } | ForEach-Object { "$($_.browser_download_url) $($_.name)" }
+
+    foreach ($url in $assetUrls) {
+        $urlParts = $url -split ' '
+        Write-Host "Downloading asset: $($urlParts[1]) from: $($urlParts[0])" -ForegroundColor Cyan
+        Invoke-WebRequest -Uri $urlParts[0] -OutFile $urlParts[1] -UseBasicParsing -Verbose
     }
 }
 
 # Download YouTube APK
-Invoke-WebRequest -Uri ($yt_url -replace '0$', '1') -OutFile "youtube-v$version.apk"
+$youtubeDownloadUrl = "$($ytUrl -replace '0$', '1')"
+Write-Host "Downloading YouTube APK from: $youtubeDownloadUrl" -ForegroundColor Cyan
+Invoke-WebRequest -Uri $youtubeDownloadUrl -OutFile "youtube-v$version.apk" -UseBasicParsing -Verbose
 
 # Read patches from file
-$lines = Get-Content -Path "./patches.txt"
+$lines = Get-Content -Path .\patches.txt
 
 # Process patches
-$include_patches = @()
-$exclude_patches = @()
+$includePatches = @()
+$excludePatches = @()
+
 foreach ($line in $lines) {
-    if ($line -match "^[+-]\s*(.*)") {
-        $patch_name = $matches[1]
-        if ($line.StartsWith("+")) {
-            $include_patches += "--include", $patch_name
-        }
-        elseif ($line.StartsWith("-")) {
-            $exclude_patches += "--exclude", $patch_name
+    if ($line -match '^([+|-])\s*(.+)') {
+        $patchName = $Matches[2]
+
+        if ($Matches[1] -eq '+') {
+            $includePatches += "--include", $patchName
+        } elseif ($Matches[1] -eq '-') {
+            $excludePatches += "--exclude", $patchName
         }
     }
 }
@@ -46,15 +53,13 @@ foreach ($line in $lines) {
 java -jar revanced-cli*.jar patch `
     --merge revanced-integrations*.apk `
     --patch-bundle revanced-patches*.jar `
-    @($exclude_patches) `
-    @($include_patches) `
+    $($excludePatches + $includePatches) `
     --out "patched-youtube-v$version.apk" `
     "youtube-v$version.apk"
 
 # Sign the patched APK
-$apksigner = Get-ChildItem -Path "$env:ANDROID_SDK_ROOT/build-tools" -Filter apksigner.exe -Recurse | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-& $apksigner.FullName sign `
-    --ks public.jks `
+$apksigner = Get-ChildItem -Path "$env:ANDROID_SDK_ROOT/build-tools" -Filter apksigner -Recurse | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+& $apksigner.FullName sign --ks public.jks `
     --ks-key-alias public `
     --ks-pass pass:public `
     --key-pass pass:public `
@@ -62,25 +67,22 @@ $apksigner = Get-ChildItem -Path "$env:ANDROID_SDK_ROOT/build-tools" -Filter apk
     --out "youtube-revanced-v$version.apk"
 
 # Obtain highest supported version information using revanced-cli
-$package_info = java -jar revanced-cli*.jar list-versions -f com.google.android.youtube revanced-patches*.jar
-$highest_supported_version = [regex]::Matches($package_info, '\d+(\.\d+)+') | Select-Object -ExpandProperty Value | Sort-Object -Descending | Select-Object -First 1
+$packageInfo = java -jar revanced-cli*.jar list-versions -f com.google.android.youtube revanced-patches*.jar
+$highestSupportedVersion = [regex]::Matches($packageInfo, '\d+(\.\d+)+') | ForEach-Object { $_.Value } | Sort-Object -Descending | Select-Object -First 1
 
 # Remove all lines containing version information
-(Get-Content -Path "version.txt") -notmatch '[0-9.]+' | Set-Content -Path "version.txt"
+(Get-Content -Path .\version.txt) -notmatch '[0-9.]' | Set-Content -Path .\version.txt
 
 # Write highest supported version to version.txt
-if ($highest_supported_version -eq $version) {
-    "Same $highest_supported_version version" >> "version.txt"
-}
-elseif ($highest_supported_version -ne $version) {
-    "Supported version is $highest_supported_version , Pls update!" >> "version.txt"
+if ($highestSupportedVersion -eq $version) {
+    Add-Content -Path .\version.txt -Value "Same $highestSupportedVersion version"
+} elseif ($highestSupportedVersion -ne $version) {
+    Add-Content -Path .\version.txt -Value "Supported version is $highestSupportedVersion, Pls update!"
 }
 
 # Upload version.txt to Github
-$gitConfigEmail = "$env:GITHUB_ACTOR_ID+$env:GITHUB_ACTOR@users.noreply.github.com"
-$gitConfigName = (Invoke-RestMethod -Uri "https://api.github.com/users/$($env:GITHUB_ACTOR)" | Select-Object -ExpandProperty name)
-git config --global user.email "$gitConfigEmail" > $null
-git config --global user.name "$gitConfigName" > $null
-git add "version.txt" > $null
-git commit -m "Update version" --author="." > $null
+git config --global user.email "$env:GITHUB_ACTOR_ID+$env:GITHUB_ACTOR@users.noreply.github.com" > $null
+git config --global user.name "$((gh api "/users/$env:GITHUB_ACTOR" | ConvertFrom-Json).name)" > $null
+git add version.txt > $null
+git commit -m "Update version" --author=. > $null
 git push origin main > $null
