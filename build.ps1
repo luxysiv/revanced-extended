@@ -1,7 +1,7 @@
 # Dropbox YouTube URL
 $ytUrl = "https://www.dropbox.com/scl/fi/wqnuqe65xd0bxn3ed2ous/com.google.android.youtube_18.45.43-1541152192_minAPI26-arm64-v8a-armeabi-v7a-x86-x86_64-nodpi-_apkmirror.com.apk?rlkey=fkujhctrb1dko978htdl0r9bi&dl=0"
 
-# Take version from Dropbox link
+# Extract version from Dropbox link
 $version = [regex]::Match($ytUrl, '\d+(\.\d+)+').Value
 
 # Declare repositories
@@ -77,7 +77,7 @@ $highestSupportedVersion = [regex]::Matches($packageInfo, '\d+(\.\d+)+') | ForEa
 if ($highestSupportedVersion -eq $version) {
     Add-Content -Path .\version.txt -Value "Same $highestSupportedVersion version"
 } elseif ($highestSupportedVersion -ne $version) {
-    Add-Content -Path .\version.txt -Value "Supported version is $highestSupportedVersion, Pls update!"
+    Add-Content -Path .\version.txt -Value "Supported version is $highestSupportedVersion, Please update!"
 }
 
 # Upload version.txt to Github
