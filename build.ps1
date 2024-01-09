@@ -72,7 +72,7 @@ function Sign-PatchedAPK {
         --ks-pass pass:public `
         --key-pass pass:public `
         --in "patched-youtube-v$version.apk" `
-        --out "youtube-revanced-v$version.apk"
+        --out "youtube-revanced-extended-v$version.apk"
 }
 
 function Update-VersionFile {
