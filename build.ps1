@@ -1,23 +1,3 @@
-# Function for downloading with progress
-Function Download-WithProgress {
-    param(
-        [string]$Url,
-        [string]$OutputPath
-    )
-
-    $webRequest = Invoke-WebRequest -Uri $Url -UseBasicParsing
-    $totalSize = $webRequest.Headers['Content-Length']
-    $downloadedSize = 0
-
-    $webRequest.Content.ForEach({
-        $downloadedSize += $_.Length
-        $percentage = ($downloadedSize / $totalSize) * 100
-        Write-Progress -Activity "Downloading" -Status "$($_.Length) bytes downloaded" -PercentComplete $percentage
-    }) | Out-File -FilePath $OutputPath -Append
-
-    Write-Progress -Activity "Download Complete" -Status "100%"
-}
-
 # Dropbox YouTube URL
 $ytUrl = "https://www.dropbox.com/scl/fi/wqnuqe65xd0bxn3ed2ous/com.google.android.youtube_18.45.43-1541152192_minAPI26-arm64-v8a-armeabi-v7a-x86-x86_64-nodpi-_apkmirror.com.apk?rlkey=fkujhctrb1dko978htdl0r9bi&dl=0"
 
@@ -33,15 +13,23 @@ $repositories = @{
 
 # Download latest releases for specified repositories
 foreach ($repo in $repositories.Keys) {
-    $response = Invoke-RestMethod -Uri "https://api.github.com/repos/$($repositories[$repo])/releases/latest"
-    
-    $assetUrls = $response.assets | Where-Object { $_.name -match $repo } | ForEach-Object {
-        Download-WithProgress -Url $_.browser_download_url -OutputPath $_.name
+    $repoApiUrl = "https://api.github.com/repos/$($repositories[$repo])/releases/latest"
+    Write-Host "Downloading latest release from: $repoApiUrl" -ForegroundColor Cyan
+    $response = Invoke-RestMethod -Uri $repoApiUrl -Verbose
+
+    $assetUrls = $response.assets | Where-Object { $_.name -match $repo } | ForEach-Object { "$($_.browser_download_url) $($_.name)" }
+
+    foreach ($url in $assetUrls) {
+        $urlParts = $url -split ' '
+        Write-Host "Downloading asset: $($urlParts[1]) from: $($urlParts[0])" -ForegroundColor Cyan
+        Invoke-WebRequest -Uri $urlParts[0] -OutFile $urlParts[1] -UseBasicParsing -Verbose
     }
 }
 
 # Download YouTube APK
-Download-WithProgress -Url "$($ytUrl -replace '0$', '1')" -OutputPath "youtube-v$version.apk"
+$youtubeDownloadUrl = "$($ytUrl -replace '0$', '1')"
+Write-Host "Downloading YouTube APK from: $youtubeDownloadUrl" -ForegroundColor Cyan
+Invoke-WebRequest -Uri $youtubeDownloadUrl -OutFile "youtube-v$version.apk" -UseBasicParsing -Verbose
 
 # Read patches from file
 $lines = Get-Content -Path .\patches.txt
@@ -90,7 +78,7 @@ $highestSupportedVersion = [regex]::Matches($packageInfo, '\d+(\.\d+)+') | ForEa
 if ($highestSupportedVersion -eq $version) {
     Add-Content -Path .\version.txt -Value "Same $highestSupportedVersion version"
 } elseif ($highestSupportedVersion -ne $version) {
-    Add-Content -Path .\version.txt -Value "Supported version is $highestSupportedVersion, Please update!"
+    Add-Content -Path .\version.txt -Value "Supported version is $highestSupportedVersion, Pls update!"
 }
 
 # Upload version.txt to Github
