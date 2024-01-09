@@ -11,6 +11,8 @@ jobs:
     name: Patch YouTube 
     permissions: write-all
     runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     steps:
     - name: Checkout Repository
@@ -26,24 +28,18 @@ jobs:
       shell: pwsh
       run: |
         .\build.ps1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
              
     - name: Release
       uses: softprops/action-gh-release@v0.1.15
       with:
         files: youtube-revanced*.apk 
-        tag_name: latest
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   
+        tag_name: latest   
 
     - name: Delete older releases
       uses: dev-drprasad/delete-older-releases@v0.2.1
       with:
         keep_latest: 1
         delete_tags: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@v2
