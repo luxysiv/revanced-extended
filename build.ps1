@@ -109,9 +109,9 @@ $ytUrl = "https://www.dropbox.com/scl/fi/wqnuqe65xd0bxn3ed2ous/com.google.androi
 $version = [regex]::Match($ytUrl, '\d+(\.\d+)+').Value
 
 $repositories = @{
-    "revanced-cli" = "revanced/revanced-cli"
-    "revanced-patches" = "revanced/revanced-patches"
-    "revanced-integrations" = "revanced/revanced-integrations"
+    "revanced-cli" = "inotia00/revanced-cli"
+    "revanced-patches" = "inotia00/revanced-patches"
+    "revanced-integrations" = "inotia00/revanced-integrations"
 }
 
 foreach ($repo in $repositories.Keys) {
