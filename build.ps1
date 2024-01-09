@@ -17,10 +17,9 @@ foreach ($repo in $repositories.Keys) {
 
     $assetUrls = $response.assets | Where-Object { $_.name -match $repo } | ForEach-Object { "$($_.browser_download_url) $($_.name)" }
 
-    foreach ($url in $asset_urls) {
-        $file = $url.Split(' ')[1]
-        $downloadUrl = $url.Split(' ')[0]
-        Invoke-WebRequest -Uri $downloadUrl -OutFile $file -UseBasicParsing -Verbose
+    foreach ($url in $assetUrls) {
+        $urlParts = $url -split ' '
+        Invoke-WebRequest -Uri $urlParts[0] -OutFile $urlParts[1] -UseBasicParsing -Verbose
     }
 }
 
