@@ -34,12 +34,6 @@ jobs:
       with:
         files: youtube-revanced*.apk 
         tag_name: latest   
-
-    - name: Delete older releases
-      uses: dev-drprasad/delete-older-releases@v0.2.1
-      with:
-        keep_latest: 1
-        delete_tags: true
           
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@v2
