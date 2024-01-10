@@ -168,22 +168,6 @@ function Compare-ReleaseBody {
     $latestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases/latest" -Headers @{ Authorization = "token $accessToken" }
 
     # Compare the release body with the patch file name
-    $releaseBody = $latestRelease.body
-    $isSameContent = ($releaseBody -eq $patchFileName)
-
-    return $isSameContent
-function Compare-ReleaseBody {
-    param (
-        [string]$repoOwner,
-        [string]$repoName,
-        [string]$accessToken,
-        [string]$patchFileName
-    )
-
-    # Get the latest release information
-    $latestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases/latest" -Headers @{ Authorization = "token $accessToken" }
-
-    # Compare the release body with the patch file name
     $releaseBody = $latestRelease.body -replace '\s'  # Remove whitespaces for accurate comparison
     $patchFileName = $patchFileName -replace '\s'     # Remove whitespaces for accurate comparison
     $isSameContent = ($releaseBody -ieq $patchFileName)
