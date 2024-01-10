@@ -163,7 +163,7 @@ function Create-GitHubRelease {
 }
 
 # Read environment variables
-$tagName = "v1.0.0"  # Tag for the release
+$tagName = "latest"  # Tag for the release
 $accessToken = $env:GITHUB_TOKEN
 $apkFilePath = "youtube-revanced-extended-v$version.apk"  # Replace with the path to your signed APK file
 $patchFilePath = "revanced-patches*.jar"  # Replace with the path to your revanced-patches file
