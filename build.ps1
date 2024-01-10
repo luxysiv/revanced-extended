@@ -114,16 +114,6 @@ $repositories = @{
     "revanced-integrations" = "inotia00/revanced-integrations"
 }
 
-foreach ($repo in $repositories.Keys) {
-    Download-RepositoryAssets -repoName $repo -repoUrl $repositories[$repo]
-}
-
-Download-YoutubeAPK -ytUrl $ytUrl -version $version
-Apply-Patches -version $version -ytUrl $ytUrl
-Sign-PatchedAPK -version $version
-Update-VersionFile -version $version
-Upload-ToGithub
-
 function Create-GitHubRelease {
     param (
         [string]$tagName,
@@ -139,9 +129,9 @@ function Create-GitHubRelease {
     
     $releaseData = @{
         tag_name = $tagName
-        target_commitish = "main"  # or specify your branch
-        name = "Release $tagName"
-        body = "Release notes for $patchFileName"  # Add your release notes here
+        target_commitish = "main" 
+        name = "$tagName"
+        body = "$patchFileName"  
     } | ConvertTo-Json
 
     # Check if the release with the same tag already exists
@@ -166,11 +156,19 @@ function Create-GitHubRelease {
     Write-Host "GitHub Release created with ID $releaseId."
 }
 
-# Usage example
-$tagName = "latest"  # Tag for the release
-$accessToken = $env:GITHUB_TOKEN
-$apkFilePath = "youtube-revanced-extended-v$version.apk"  # Replace with the path to your signed APK file
-$patchFilePath = "revanced-patches*.jar"  # Replace with the path to your revanced-patches file
+foreach ($repo in $repositories.Keys) {
+    Download-RepositoryAssets -repoName $repo -repoUrl $repositories[$repo]
+}
 
-# Create GitHub Release
+Download-YoutubeAPK -ytUrl $ytUrl -version $version
+Apply-Patches -version $version -ytUrl $ytUrl
+Sign-PatchedAPK -version $version
+Update-VersionFile -version $version
+Upload-ToGithub
+
+$tagName = "latest"  
+$accessToken = $env:GITHUB_TOKEN
+$apkFilePath = "youtube-revanced-extended-v$version.apk"  
+$patchFilePath = "revanced-patches*.jar"  
+
 Create-GitHubRelease -tagName $tagName -accessToken $accessToken -apkFilePath $apkFilePath -patchFilePath $patchFilePath
