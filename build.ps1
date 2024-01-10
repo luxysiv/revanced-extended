@@ -156,19 +156,34 @@ function Create-GitHubRelease {
     Write-Host "GitHub Release created with ID $releaseId."
 }
 
+function Compare-LocalAndGitHubBasenames {
+    param (
+        [string]$localFilePath,
+        [string]$githubFilePath
+    )
+
+    $localBasename = (Get-Item $localFilePath).BaseName
+    $githubBasename = (Get-Item $githubFilePath).BaseName
+
+    return $localBasename -ne $githubBasename
+}
+
 foreach ($repo in $repositories.Keys) {
     Download-RepositoryAssets -repoName $repo -repoUrl $repositories[$repo]
 }
-
-Download-YoutubeAPK -ytUrl $ytUrl -version $version
-Apply-Patches -version $version -ytUrl $ytUrl
-Sign-PatchedAPK -version $version
-Update-VersionFile -version $version
-Upload-ToGithub
 
 $tagName = "latest"  
 $accessToken = $env:GITHUB_TOKEN
 $apkFilePath = "youtube-revanced-extended-v$version.apk"  
 $patchFilePath = "revanced-patches*.jar"  
 
-Create-GitHubRelease -tagName $tagName -accessToken $accessToken -apkFilePath $apkFilePath -patchFilePath $patchFilePath
+if (Compare-LocalAndGitHubBasenames -localFilePath "revanced*.jar" -githubFilePath "revanced-patches*.jar") {
+    Download-YoutubeAPK -ytUrl $ytUrl -version $version
+    Apply-Patches -version $version -ytUrl $ytUrl
+    Sign-PatchedAPK -version $version
+    Update-VersionFile -version $version
+    Upload-ToGithub
+    Create-GitHubRelease -tagName $tagName -accessToken $accessToken -apkFilePath $apkFilePath -patchFilePath $patchFilePath 
+} else {
+    Write-Host "Basename matches. Skipping tasks." -ForegroundColor Yellow
+}
