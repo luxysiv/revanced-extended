@@ -156,21 +156,27 @@ function Create-GitHubRelease {
     Write-Host "GitHub Release created with ID $releaseId."
 }
 
+# ...
+
 # Function to check if body content matches revanced-patches assets
 function Check-ReleaseBody {
     param (
-        [string]$scriptRepoBody,
+        [string]$scriptRepoLatestRelease,
         [string]$downloadedPatchFileName
     )
 
-    # Compare body content with downloaded patch file name
-    if ($scriptRepoBody -ne $downloadedPatchFileName) {
-        return $true  # Perform the Download, Patch, Sign, Commit, Release steps
+    # Check if the release information is available
+    if ($scriptRepoLatestRelease -and $scriptRepoLatestRelease.body) {
+        # Compare body content with downloaded patch file name
+        return $scriptRepoLatestRelease.body -ne $downloadedPatchFileName
     } else {
-        return $false  # Skip the steps
+        return $true  # Release information not found, perform the Download, Patch, Sign, Commit, Release steps
     }
 }
 
+# ...
+
+# Main script
 $repoOwner = $env:GITHUB_REPOSITORY_OWNER
 $repoName = $env:GITHUB_REPOSITORY_NAME
 $accessToken = $accessToken = $env:GITHUB_TOKEN
@@ -181,14 +187,24 @@ foreach ($repo in $repositories.Keys) {
 }
 
 # Get the body content of the script repository release
-$scriptRepoLatestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases/latest" -Headers @{ Authorization = "token $accessToken" }
-$scriptRepoBody = $scriptRepoLatestRelease.body
+$scriptRepoLatestRelease = $null
+try {
+    $scriptRepoLatestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases/latest" -Headers @{ Authorization = "token $accessToken" }
+} catch {
+    Write-Host "Error retrieving release information from the script repository. Running the build steps." -ForegroundColor Yellow
+
+    # Perform your build steps here
+    # ...
+
+    # Exit the script or handle the error as needed
+    exit
+}
 
 # Get the downloaded patch file name
-$downloadedPatchFileName = (Get-ChildItem -Filter "revanced-patches*.jar").BaseName
+$downloadedPatchFileName = (Get-ChildItem -Filter "revanced-patches*.jar").Name
 
 # Check if the body content matches the downloaded patch file name
-if (Check-ReleaseBody -scriptRepoBody $scriptRepoBody -downloadedPatchFileName $downloadedPatchFileName) {
+if (Check-ReleaseBody -scriptRepoLatestRelease $scriptRepoLatestRelease -downloadedPatchFileName $downloadedPatchFileName) {
     # Perform the remaining steps: Patch, Sign, Commit, Release
     Download-YoutubeAPK -ytUrl $ytUrl -version $version
     Apply-Patches -version $version -ytUrl $ytUrl
