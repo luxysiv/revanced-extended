@@ -156,62 +156,51 @@ function Create-GitHubRelease {
     Write-Host "GitHub Release created with ID $releaseId."
 }
 
-function Compare-ReleaseBody {
+# Function to check if body content matches revanced-patches assets
+function Check-ReleaseBody {
     param (
-        [string]$repoOwner,
-        [string]$repoName,
-        [string]$accessToken,
-        [string]$patchFileName
+        [string]$scriptRepoBody,
+        [string]$downloadedPatchFileName
     )
 
-    # Get the latest release information
-    $latestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases/latest" -Headers @{ Authorization = "token $accessToken" }
-
-    # Compare the release body with the patch file name
-    $releaseBody = $latestRelease.body -replace '\s'  # Remove whitespaces for accurate comparison
-    $patchFileName = $patchFileName -replace '\s'     # Remove whitespaces for accurate comparison
-    $isSameContent = ($releaseBody -ieq $patchFileName)
-
-    return $isSameContent
+    # Compare body content with downloaded patch file name
+    if ($scriptRepoBody -ne $downloadedPatchFileName) {
+        return $true  # Perform the Download, Patch, Sign, Commit, Release steps
+    } else {
+        return $false  # Skip the steps
+    }
 }
 
-function Main-Script {
-    param (
-        [string]$ytUrl,
-        [string]$version,
-        [hashtable]$repositories,
-        [string]$accessToken
-    )
+$repoOwner = $env:GITHUB_REPOSITORY_OWNER
+$repoName = $env:GITHUB_REPOSITORY_NAME
+$accessToken = $accessToken = $env:GITHUB_TOKEN
 
-    foreach ($repo in $repositories.Keys) {
-        Download-RepositoryAssets -repoName $repo -repoUrl $repositories[$repo]
-    }
+# Perform Download-RepositoryAssets
+foreach ($repo in $repositories.Keys) {
+    Download-RepositoryAssets -repoName $repo -repoUrl $repositories[$repo]
+}
 
+# Get the body content of the script repository release
+$scriptRepoLatestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases/latest" -Headers @{ Authorization = "token $accessToken" }
+$scriptRepoBody = $scriptRepoLatestRelease.body
+
+# Get the downloaded patch file name
+$downloadedPatchFileName = (Get-ChildItem -Filter "revanced-patches*.jar").Name
+
+# Check if the body content matches the downloaded patch file name
+if (Check-ReleaseBody -scriptRepoBody $scriptRepoBody -downloadedPatchFileName $downloadedPatchFileName) {
+    # Perform the remaining steps: Patch, Sign, Commit, Release
     Download-YoutubeAPK -ytUrl $ytUrl -version $version
     Apply-Patches -version $version -ytUrl $ytUrl
     Sign-PatchedAPK -version $version
     Update-VersionFile -version $version
     Upload-ToGithub
 
-    $tagName = "latest"  
-    $apkFilePath = "youtube-revanced-extended-v$version.apk"  
-    $patchFilePath = "revanced-patches*.jar"  
+    $tagName = "latest"
+    $apkFilePath = "youtube-revanced-extended-v$version.apk"
+    $patchFilePath = "revanced-patches*.jar"
 
-    if (-not (Compare-ReleaseBody -repoOwner "inotia00" -repoName "revanced-patches" -accessToken $accessToken -patchFileName (Get-Item $patchFilePath).BaseName)) {
-        Create-GitHubRelease -tagName $tagName -accessToken $accessToken -apkFilePath $apkFilePath -patchFilePath $patchFilePath
-    }
+    Create-GitHubRelease -tagName $tagName -accessToken $accessToken -apkFilePath $apkFilePath -patchFilePath $patchFilePath
+} else {
+    Write-Host "Skipping the steps as the body content matches the downloaded patch file name." -ForegroundColor Yellow
 }
-
-# Main script 
-$ytUrl = "https://www.dropbox.com/scl/fi/wqnuqe65xd0bxn3ed2ous/com.google.android.youtube_18.45.43-1541152192_minAPI26-arm64-v8a-armeabi-v7a-x86-x86_64-nodpi-_apkmirror.com.apk?rlkey=fkujhctrb1dko978htdl0r9bi&dl=0"
-$version = [regex]::Match($ytUrl, '\d+(\.\d+)+').Value
-
-$repositories = @{
-    "revanced-cli" = "inotia00/revanced-cli"
-    "revanced-patches" = "inotia00/revanced-patches"
-    "revanced-integrations" = "inotia00/revanced-integrations"
-}
-
-$accessToken = $env:GITHUB_TOKEN  # Replace with your GitHub token
-
-Main-Script -ytUrl $ytUrl -version $version -repositories $repositories -accessToken $accessToken
