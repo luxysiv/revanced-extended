@@ -139,10 +139,10 @@ function Create-GitHubRelease {
         body = Get-Content -Raw -Path $patchFilePath
     } | ConvertTo-Json
 
-    $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$env:GITHUB_REPOSITORY_OWNER/$env:GITHUB_REPOSITORY_NAME/releases/tags/$tagName" -Headers @{ Authorization = "token $accessToken" }
+    $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$env:GITHUB_REPOSITORY/releases/tags/$tagName" -Headers @{ Authorization = "token $accessToken" }
 
     $releaseId = if ($release.id -eq $null) {
-        Invoke-RestMethod -Uri "https://api.github.com/repos/$env:GITHUB_REPOSITORY_OWNER/$env:GITHUB_REPOSITORY_NAME/releases" -Headers @{ Authorization = "token $accessToken" } -Method Post -Body $releaseData -ContentType "application/json" | Select-Object -ExpandProperty id
+        Invoke-RestMethod -Uri "https://api.github.com/repos/$env:GITHUB_REPOSITORY/releases" -Headers @{ Authorization = "token $accessToken" } -Method Post -Body $releaseData -ContentType "application/json" | Select-Object -ExpandProperty id
     } else {
         $release.id
     }
@@ -150,10 +150,10 @@ function Create-GitHubRelease {
     $apkFileName = (Get-Item $apkFilePath).BaseName
     $patchFileName = (Get-Item $patchFilePath).BaseName
 
-    $uploadUrlApk = "https://uploads.github.com/repos/$env:GITHUB_REPOSITORY_OWNER/$env:GITHUB_REPOSITORY_NAME/releases/$releaseId/assets?name=$apkFileName"
+    $uploadUrlApk = "https://uploads.github.com/repos/$env:GITHUB_REPOSITORY/releases/$releaseId/assets?name=$apkFileName"
     Invoke-RestMethod -Uri $uploadUrlApk -Headers @{ Authorization = "token $accessToken" } -Method Post -InFile $apkFilePath -ContentType "application/zip" | Out-Null
 
-    $uploadUrlPatch = "https://uploads.github.com/repos/$env:GITHUB_REPOSITORY_OWNER/$env:GITHUB_REPOSITORY_NAME/releases/$releaseId/assets?name=$patchFileName"
+    $uploadUrlPatch = "https://uploads.github.com/repos/$env:GITHUB_REPOSITORY/releases/$releaseId/assets?name=$patchFileName"
     Invoke-RestMethod -Uri $uploadUrlPatch -Headers @{ Authorization = "token $accessToken" } -Method Post -InFile $patchFilePath -ContentType "application/zip" | Out-Null
 
     Write-Host "GitHub Release created with ID $releaseId."
