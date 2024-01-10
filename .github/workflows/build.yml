@@ -29,12 +29,6 @@ jobs:
       run: |
         .\build.ps1
              
-    - name: Release
-      uses: softprops/action-gh-release@v0.1.15
-      with:
-        files: youtube-revanced*.apk 
-        tag_name: latest   
-          
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@v2
       with:
