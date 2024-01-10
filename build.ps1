@@ -123,3 +123,54 @@ Apply-Patches -version $version -ytUrl $ytUrl
 Sign-PatchedAPK -version $version
 Update-VersionFile -version $version
 Upload-ToGithub
+
+function Create-GitHubRelease {
+    param (
+        [string]$repoOwner,
+        [string]$repoName,
+        [string]$tagName,
+        [string]$accessToken,
+        [string]$apkFilePath,
+        [string]$patchFilePath
+    )
+
+    $releaseApiUrl = "https://api.github.com/repos/$repoOwner/$repoName/releases/tags/$tagName"
+    $existingRelease = Invoke-RestMethod -Uri $releaseApiUrl -Headers @{ Authorization = "token $accessToken" }
+
+    # Save patch file name to patches.txt
+    $patchFileName = (Get-Item $patchFilePath).BaseName
+    Add-Content -Path "patches.txt" -Value $patchFileName
+
+    $releaseBody = Get-Content -Raw -Path "patches.txt"
+    $releaseData = @{
+        tag_name = $tagName
+        target_commitish = "main"  # or specify your branch
+        name = "Release $tagName"
+        body = $releaseBody
+    } | ConvertTo-Json
+
+    $releaseId = if ($existingRelease.id -eq $null) {
+        Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases" -Headers @{ Authorization = "token $accessToken" } -Method Post -Body $releaseData -ContentType "application/json" | Select-Object -ExpandProperty id
+    } else {
+        $existingRelease.id
+    }
+
+    $uploadUrl = "https://uploads.github.com/repos/$repoOwner/$repoName/releases/$releaseId/assets?name=$(Split-Path $apkFilePath -Leaf)"
+    Invoke-RestMethod -Uri $uploadUrl -Headers @{ Authorization = "token $accessToken" } -Method Post -InFile $apkFilePath -ContentType "application/zip" | Out-Null
+
+    $uploadUrlPatch = "https://uploads.github.com/repos/$repoOwner/$repoName/releases/$releaseId/assets?name=$(Split-Path $patchFilePath -Leaf)"
+    Invoke-RestMethod -Uri $uploadUrlPatch -Headers @{ Authorization = "token $accessToken" } -Method Post -InFile $patchFilePath -ContentType "application/zip" | Out-Null
+
+    Write-Host "GitHub Release created with ID $releaseId."
+}
+
+# Read environment variables
+$repoOwner = $env:GITHUB_REPOSITORY_OWNER
+$repoName = $env:GITHUB_REPOSITORY_NAME
+$tagName = "v1.0.0"  # Tag for the release
+$accessToken = $env:GITHUB_TOKEN
+$apkFilePath = "youtube-revanced-extended-v$version.apk"  # Replace with the path to your signed APK file
+$patchFilePath = "revanced-patches*.jar"  # Replace with the path to your revanced-patches file
+
+# Create GitHub Release
+Create-GitHubRelease -repoOwner $repoOwner -repoName $repoName -tagName $tagName -accessToken $accessToken -apkFilePath $apkFilePath -patchFilePath $patchFilePath
