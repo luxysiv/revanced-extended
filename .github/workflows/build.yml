@@ -11,8 +11,6 @@ jobs:
     name: Patch YouTube 
     permissions: write-all
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     steps:
     - name: Checkout Repository
@@ -28,6 +26,9 @@ jobs:
       shell: pwsh
       run: |
         .\build.ps1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
              
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@v2
