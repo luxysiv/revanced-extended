@@ -134,22 +134,21 @@ function Create-GitHubRelease {
 
     $repoOwner = $env:GITHUB_REPOSITORY_OWNER
     $repoName = $env:GITHUB_REPOSITORY_NAME
-
+    $patchFileName = (Get-Item $patchFilePath).BaseName
+    
     $releaseData = @{
         tag_name = $tagName
         target_commitish = "main"  # or specify your branch
         name = "Release $tagName"
-        body = Get-Content -Raw -Path $patchFilePath  # Release notes from the content of revanced-patches file
-    }
-
-    $releaseDataJson = $releaseData | ConvertTo-Json
+        body = "$patchFilePath"  # Add your release notes here
+    } | ConvertTo-Json
 
     try {
         # Try to get an existing release
         $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases/tags/$tagName" -Headers @{ Authorization = "token $accessToken" }
     } catch {
         # If the release is not found, create a new release
-        $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases" -Headers @{ Authorization = "token $accessToken" } -Method Post -Body $releaseDataJson -ContentType "application/json"
+        $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases" -Headers @{ Authorization = "token $accessToken" } -Method Post -Body $releaseData -ContentType "application/json"
     }
 
     $releaseId = $release.id
