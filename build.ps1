@@ -139,16 +139,18 @@ function Create-GitHubRelease {
         tag_name = $tagName
         target_commitish = "main"  # or specify your branch
         name = "Release $tagName"
-        body = Get-Content -Raw -Path $patchFilePath
+        body = "Release notes for $tagName"  # Add your release notes here
     } | ConvertTo-Json
 
-    $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases/tags/$tagName" -Headers @{ Authorization = "token $accessToken" }
-
-    $releaseId = if ($release.id -eq $null) {
-        Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases" -Headers @{ Authorization = "token $accessToken" } -Method Post -Body $releaseData -ContentType "application/json" | Select-Object -ExpandProperty id
-    } else {
-        $release.id
+    try {
+        # Try to get an existing release
+        $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases/tags/$tagName" -Headers @{ Authorization = "token $accessToken" }
+    } catch {
+        # If the release is not found, create a new release
+        $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases" -Headers @{ Authorization = "token $accessToken" } -Method Post -Body $releaseData -ContentType "application/json"
     }
+
+    $releaseId = $release.id
 
     $apkFileName = (Get-Item $apkFilePath).BaseName
     $patchFileName = (Get-Item $patchFilePath).BaseName
@@ -159,10 +161,10 @@ function Create-GitHubRelease {
     $uploadUrlPatch = "https://uploads.github.com/repos/$repoOwner/$repoName/releases/$releaseId/assets?name=$patchFileName"
     Invoke-RestMethod -Uri $uploadUrlPatch -Headers @{ Authorization = "token $accessToken" } -Method Post -InFile $patchFilePath -ContentType "application/zip" | Out-Null
 
-    Write-Host "GitHub Release created with ID $releaseId."
+    Write-Host "GitHub Release created or updated with ID $releaseId."
 }
 
-# Read environment variables
+# Usage example
 $tagName = "latest"  # Tag for the release
 $accessToken = $env:GITHUB_TOKEN
 $apkFilePath = "youtube-revanced-extended-v$version.apk"  # Replace with the path to your signed APK file
