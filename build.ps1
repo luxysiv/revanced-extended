@@ -140,7 +140,7 @@ function Create-GitHubRelease {
         tag_name = $tagName
         target_commitish = "main"  # or specify your branch
         name = "Release $tagName"
-        body = "$patchFilePath"  # Add your release notes here
+        body = "Release notes for $patchFileName"  # Add your release notes here
     } | ConvertTo-Json
 
     try {
@@ -165,7 +165,7 @@ function Create-GitHubRelease {
 $tagName = "latest"  # Tag for the release
 $accessToken = $env:GITHUB_TOKEN
 $apkFilePath = "youtube-revanced-extended-v$version.apk"  # Replace with the path to your signed APK file
-$patchFilePath = "revanced-patches*.jar"  # Replace with the path to your revanced-patches file
+$patchFilePath = "revanced-patches-v$version.jar"  # Replace with the path to your revanced-patches file
 
 # Create GitHub Release
 Create-GitHubRelease -tagName $tagName -accessToken $accessToken -apkFilePath $apkFilePath -patchFilePath $patchFilePath
