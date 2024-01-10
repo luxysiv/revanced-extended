@@ -132,10 +132,8 @@ function Create-GitHubRelease {
         [string]$patchFilePath
     )
 
-    # Get repository owner and name from GitHub API
-    $repositoryInfo = Invoke-RestMethod -Uri "https://api.github.com/user/repos" -Headers @{ Authorization = "token $accessToken" }
-    $repoOwner = $repositoryInfo[0].owner.login
-    $repoName = $repositoryInfo[0].name
+    $repoOwner = $env:GITHUB_REPOSITORY_OWNER
+    $repoName = $env:GITHUB_REPOSITORY_NAME
 
     $releaseData = @{
         tag_name = $tagName
