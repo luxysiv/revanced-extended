@@ -1,5 +1,4 @@
 name: Patch Revanced 
-
 on:
   push:
   schedule:
@@ -21,7 +20,7 @@ jobs:
     - name: Set up JDK
       uses: actions/setup-java@v3
       with:
-        distribution: 'adopt'
+        distribution: 'zulu'
         java-version: '17'
 
     - name: Patch Revanced
