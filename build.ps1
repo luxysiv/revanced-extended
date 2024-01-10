@@ -208,7 +208,7 @@ try {
 }
 
 # Get the downloaded patch file name
-$downloadedPatchFileName = (Get-ChildItem -Filter "revanced-patches*.jar").Name
+$downloadedPatchFileName = (Get-ChildItem -Filter "revanced-patches*.jar").BaseName
 
 # Check if the body content matches the downloaded patch file name
 if (Check-ReleaseBody -scriptRepoLatestRelease $scriptRepoLatestRelease -downloadedPatchFileName $downloadedPatchFileName) {
