@@ -134,13 +134,14 @@ function Create-GitHubRelease {
 
     $repoOwner = $env:GITHUB_REPOSITORY_OWNER
     $repoName = $env:GITHUB_REPOSITORY_NAME
+    $apkFileName = (Get-Item $apkFilePath).Name
     $patchFileName = (Get-Item $patchFilePath).BaseName
     
     $releaseData = @{
         tag_name = $tagName
         target_commitish = "main"  # or specify your branch
-        name = "Release $tagName"
-        body = "Release notes for $patchFileName"  # Add your release notes here
+        name = "$tagName"
+        body = "$patchFileName"  # Add your release notes here
     } | ConvertTo-Json
 
     try {
@@ -152,8 +153,6 @@ function Create-GitHubRelease {
     }
 
     $releaseId = $release.id
-
-    $apkFileName = (Get-Item $apkFilePath).BaseName
 
     $uploadUrlApk = "https://uploads.github.com/repos/$repoOwner/$repoName/releases/$releaseId/assets?name=$apkFileName"
     Invoke-RestMethod -Uri $uploadUrlApk -Headers @{ Authorization = "token $accessToken" } -Method Post -InFile $apkFilePath -ContentType "application/zip" | Out-Null
