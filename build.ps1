@@ -204,6 +204,7 @@ try {
     $patchFilePath = "revanced-patches*.jar"
 
     Create-GitHubRelease -tagName $tagName -accessToken $accessToken -apkFilePath $apkFilePath -patchFilePath $patchFilePath
+    exit
 }
 
 # Get the downloaded patch file name
