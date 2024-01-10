@@ -185,7 +185,7 @@ $scriptRepoLatestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/
 $scriptRepoBody = $scriptRepoLatestRelease.body
 
 # Get the downloaded patch file name
-$downloadedPatchFileName = (Get-ChildItem -Filter "revanced-patches*.jar").Name
+$downloadedPatchFileName = (Get-ChildItem -Filter "revanced-patches*.jar").BaseName
 
 # Check if the body content matches the downloaded patch file name
 if (Check-ReleaseBody -scriptRepoBody $scriptRepoBody -downloadedPatchFileName $downloadedPatchFileName) {
