@@ -156,19 +156,61 @@ function Create-GitHubRelease {
     Write-Host "GitHub Release created with ID $releaseId."
 }
 
-foreach ($repo in $repositories.Keys) {
-    Download-RepositoryAssets -repoName $repo -repoUrl $repositories[$repo]
+function Compare-ReleaseBody {
+    param (
+        [string]$repoOwner,
+        [string]$repoName,
+        [string]$accessToken,
+        [string]$patchFileName
+    )
+
+    # Get the latest release information
+    $latestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases/latest" -Headers @{ Authorization = "token $accessToken" }
+
+    # Compare the release body with the patch file name
+    $releaseBody = $latestRelease.body
+    $isSameContent = ($releaseBody -eq $patchFileName)
+
+    return $isSameContent
 }
 
-Download-YoutubeAPK -ytUrl $ytUrl -version $version
-Apply-Patches -version $version -ytUrl $ytUrl
-Sign-PatchedAPK -version $version
-Update-VersionFile -version $version
-Upload-ToGithub
+function Main-Script {
+    param (
+        [string]$ytUrl,
+        [string]$version,
+        [hashtable]$repositories,
+        [string]$accessToken
+    )
 
-$tagName = "latest"  
-$accessToken = $env:GITHUB_TOKEN
-$apkFilePath = "youtube-revanced-extended-v$version.apk"  
-$patchFilePath = "revanced-patches*.jar"  
+    foreach ($repo in $repositories.Keys) {
+        Download-RepositoryAssets -repoName $repo -repoUrl $repositories[$repo]
+    }
 
-Create-GitHubRelease -tagName $tagName -accessToken $accessToken -apkFilePath $apkFilePath -patchFilePath $patchFilePath
+    Download-YoutubeAPK -ytUrl $ytUrl -version $version
+    Apply-Patches -version $version -ytUrl $ytUrl
+    Sign-PatchedAPK -version $version
+    Update-VersionFile -version $version
+    Upload-ToGithub
+
+    $tagName = "latest"  
+    $apkFilePath = "youtube-revanced-extended-v$version.apk"  
+    $patchFilePath = "revanced-patches*.jar"  
+
+    if (-not (Compare-ReleaseBody -repoOwner "inotia00" -repoName "revanced-patches" -accessToken $accessToken -patchFileName (Get-Item $patchFilePath).BaseName)) {
+        Create-GitHubRelease -tagName $tagName -accessToken $accessToken -apkFilePath $apkFilePath -patchFilePath $patchFilePath
+    }
+}
+
+# Main script 
+$ytUrl = "https://www.dropbox.com/scl/fi/wqnuqe65xd0bxn3ed2ous/com.google.android.youtube_18.45.43-1541152192_minAPI26-arm64-v8a-armeabi-v7a-x86-x86_64-nodpi-_apkmirror.com.apk?rlkey=fkujhctrb1dko978htdl0r9bi&dl=0"
+$version = [regex]::Match($ytUrl, '\d+(\.\d+)+').Value
+
+$repositories = @{
+    "revanced-cli" = "inotia00/revanced-cli"
+    "revanced-patches" = "inotia00/revanced-patches"
+    "revanced-integrations" = "inotia00/revanced-integrations"
+}
+
+$accessToken = $env:GITHUB_TOKEN  # Replace with your GitHub token
+
+Main-Script -ytUrl $ytUrl -version $version -repositories $repositories -accessToken $accessToken
