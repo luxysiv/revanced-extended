@@ -193,11 +193,17 @@ try {
 } catch {
     Write-Host "Error retrieving release information from the script repository. Running the build steps." -ForegroundColor Yellow
 
-    # Perform your build steps here
-    # ...
+    Download-YoutubeAPK -ytUrl $ytUrl -version $version
+    Apply-Patches -version $version -ytUrl $ytUrl
+    Sign-PatchedAPK -version $version
+    Update-VersionFile -version $version
+    Upload-ToGithub
 
-    # Exit the script or handle the error as needed
-    exit
+    $tagName = "latest"
+    $apkFilePath = "youtube-revanced-extended-v$version.apk"
+    $patchFilePath = "revanced-patches*.jar"
+
+    Create-GitHubRelease -tagName $tagName -accessToken $accessToken -apkFilePath $apkFilePath -patchFilePath $patchFilePath
 }
 
 # Get the downloaded patch file name
