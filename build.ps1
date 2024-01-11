@@ -181,6 +181,9 @@ $repositories = @{
 $repoOwner = $env:GITHUB_REPOSITORY_OWNER
 $repoName = $env:GITHUB_REPOSITORY_NAME
 $accessToken = $accessToken = $env:GITHUB_TOKEN
+$tagName = "latest"
+$apkFilePath = "youtube-revanced-extended-v$version.apk"
+$patchFilePath = "revanced-patches*.jar"
 
 # Perform Download-RepositoryAssets
 foreach ($repo in $repositories.Keys) {
@@ -192,18 +195,11 @@ $scriptRepoLatestRelease = $null
 try {
     $scriptRepoLatestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases/latest" -Headers @{ Authorization = "token $accessToken" }
 } catch {
-    Write-Host "No release information from repository. Running the patch." -ForegroundColor Yellow
-
     Download-YoutubeAPK -ytUrl $ytUrl -version $version
     Apply-Patches -version $version -ytUrl $ytUrl
     Sign-PatchedAPK -version $version
     Update-VersionFile -version $version
     Upload-ToGithub
-
-    $tagName = "latest"
-    $apkFilePath = "youtube-revanced-extended-v$version.apk"
-    $patchFilePath = "revanced-patches*.jar"
-
     Create-GitHubRelease -tagName $tagName -accessToken $accessToken -apkFilePath $apkFilePath -patchFilePath $patchFilePath
     exit
 }
@@ -219,11 +215,6 @@ if (Check-ReleaseBody -scriptRepoBody $scriptRepoBody -downloadedPatchFileName $
     Sign-PatchedAPK -version $version
     Update-VersionFile -version $version
     Upload-ToGithub
-
-    $tagName = "latest"
-    $apkFilePath = "youtube-revanced-extended-v$version.apk"
-    $patchFilePath = "revanced-patches*.jar"
-
     Create-GitHubRelease -tagName $tagName -accessToken $accessToken -apkFilePath $apkFilePath -patchFilePath $patchFilePath
 } else {
     Write-Host "Skipping because patched." -ForegroundColor Yellow
