@@ -14,7 +14,7 @@ $repoOwner = $env:GITHUB_REPOSITORY_OWNER
 $repoName = $env:GITHUB_REPOSITORY_NAME
 $accessToken = $accessToken = $env:GITHUB_TOKEN
 $tagName = "latest"
-$apkFilePath = "youtube-revanced-extended-v$version.apk"
+$apkFilePath = "youtube-revanced*.apk"
 $patchFilePath = "revanced-patches*.jar"
 
 # Perform Download-RepositoryAssets
