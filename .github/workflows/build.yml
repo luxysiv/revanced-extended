@@ -29,6 +29,7 @@ jobs:
       shell: pwsh
       run: |
         .\build.ps1
+      if: false
       continue-on-error: true
              
     - name: Delete workflow runs
