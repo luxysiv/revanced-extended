@@ -13,7 +13,7 @@ $repositories = @{
 $repoOwner = $env:GITHUB_REPOSITORY_OWNER
 $repoName = $env:GITHUB_REPOSITORY_NAME
 $accessToken = $accessToken = $env:GITHUB_TOKEN
-$tagName = "latest"
+$tagName = Get-Date -Format "dd-MM-yyyy"
 $apkFilePath = "youtube-revanced*.apk"
 $patchFilePath = "revanced-patches*.jar"
 
