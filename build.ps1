@@ -129,19 +129,29 @@ function Create-GitHubRelease {
         # If the release exists, delete it
         Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases/$($existingRelease.id)" -Headers @{ Authorization = "token $accessToken" } -Method Delete
         Write-Host "Existing release deleted with tag $tagName."
+
+        # Continue to create a new release
+        $newRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases" -Headers @{ Authorization = "token $accessToken" } -Method Post -Body $releaseData -ContentType "application/json"
+        $releaseId = $newRelease.id
+
+        # Upload APK file
+        $uploadUrlApk = "https://uploads.github.com/repos/$repoOwner/$repoName/releases/$releaseId/assets?name=$apkFileName"
+        Invoke-RestMethod -Uri $uploadUrlApk -Headers @{ Authorization = "token $accessToken" } -Method Post -InFile $apkFilePath -ContentType "application/zip" | Out-Null
+
+        Write-Host "GitHub Release created with ID $releaseId."
     } catch {
         Write-Host "No existing release found with tag $tagName."
+
+        # Create a new release
+        $newRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases" -Headers @{ Authorization = "token $accessToken" } -Method Post -Body $releaseData -ContentType "application/json"
+        $releaseId = $newRelease.id
+
+        # Upload APK file
+        $uploadUrlApk = "https://uploads.github.com/repos/$repoOwner/$repoName/releases/$releaseId/assets?name=$apkFileName"
+        Invoke-RestMethod -Uri $uploadUrlApk -Headers @{ Authorization = "token $accessToken" } -Method Post -InFile $apkFilePath -ContentType "application/zip" | Out-Null
+
+        Write-Host "GitHub Release created with ID $releaseId."
     }
-
-    # Create a new release
-    $newRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases" -Headers @{ Authorization = "token $accessToken" } -Method Post -Body $releaseData -ContentType "application/json"
-    $releaseId = $newRelease.id
-
-    # Upload APK file
-    $uploadUrlApk = "https://uploads.github.com/repos/$repoOwner/$repoName/releases/$releaseId/assets?name=$apkFileName"
-    Invoke-RestMethod -Uri $uploadUrlApk -Headers @{ Authorization = "token $accessToken" } -Method Post -InFile $apkFilePath -ContentType "application/zip" | Out-Null
-
-    Write-Host "GitHub Release created with ID $releaseId."
 }
 
 function Check-ReleaseBody {
