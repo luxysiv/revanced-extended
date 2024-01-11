@@ -181,6 +181,7 @@ foreach ($repo in $repositories.Keys) {
 }
 
 # Get the body content of the script repository release
+$scriptRepoLatestRelease = $null
 try {
     $scriptRepoLatestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases/latest" -Headers @{ Authorization = "token $accessToken" }
 } catch {
