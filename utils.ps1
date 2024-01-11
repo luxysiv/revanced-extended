@@ -118,7 +118,7 @@ function Create-GitHubRelease {
     $releaseData = @{
         tag_name = $tagName
         target_commitish = "main" 
-        name = "$tagName"
+        name = "Release $tagName"
         body = "$patchFileName"  
     } | ConvertTo-Json
 
