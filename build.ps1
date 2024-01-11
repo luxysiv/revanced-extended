@@ -156,27 +156,21 @@ function Create-GitHubRelease {
     Write-Host "GitHub Release created with ID $releaseId."
 }
 
-# ...
-
 # Function to check if body content matches revanced-patches assets
 function Check-ReleaseBody {
     param (
-        [string]$scriptRepoLatestRelease,
+        [string]$scriptRepoBody,
         [string]$downloadedPatchFileName
     )
 
-    # Check if the release information is available
-    if ($scriptRepoLatestRelease -and $scriptRepoLatestRelease.body) {
-        # Compare body content with downloaded patch file name
-        return $scriptRepoLatestRelease.body -ne $downloadedPatchFileName
+    # Compare body content with downloaded patch file name
+    if ($scriptRepoBody -ne $downloadedPatchFileName) {
+        return $true  # Perform the Download, Patch, Sign, Commit, Release steps
     } else {
-        return $true  # Release information not found, perform the Download, Patch, Sign, Commit, Release steps
+        return $false  # Skip the steps
     }
 }
 
-# ...
-
-# Main script
 $repoOwner = $env:GITHUB_REPOSITORY_OWNER
 $repoName = $env:GITHUB_REPOSITORY_NAME
 $accessToken = $accessToken = $env:GITHUB_TOKEN
@@ -187,7 +181,6 @@ foreach ($repo in $repositories.Keys) {
 }
 
 # Get the body content of the script repository release
-$scriptRepoLatestRelease = $null
 try {
     $scriptRepoLatestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases/latest" -Headers @{ Authorization = "token $accessToken" }
 } catch {
@@ -206,12 +199,13 @@ try {
     Create-GitHubRelease -tagName $tagName -accessToken $accessToken -apkFilePath $apkFilePath -patchFilePath $patchFilePath
     exit
 }
+$scriptRepoBody = $scriptRepoLatestRelease.body
 
 # Get the downloaded patch file name
 $downloadedPatchFileName = (Get-ChildItem -Filter "revanced-patches*.jar").BaseName
 
 # Check if the body content matches the downloaded patch file name
-if (Check-ReleaseBody -scriptRepoLatestRelease $scriptRepoLatestRelease -downloadedPatchFileName $downloadedPatchFileName) {
+if (Check-ReleaseBody -scriptRepoBody $scriptRepoBody -downloadedPatchFileName $downloadedPatchFileName) {
     # Perform the remaining steps: Patch, Sign, Commit, Release
     Download-YoutubeAPK -ytUrl $ytUrl -version $version
     Apply-Patches -version $version -ytUrl $ytUrl
