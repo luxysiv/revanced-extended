@@ -43,8 +43,7 @@ apply_patches() {
         fi
     done
 
-    # Apply patches using Revanced tools
-    
+    # Apply patches using Revanced tools 
     color_green "Patching..."
     java -jar revanced-cli*.jar patch \
         --merge revanced-integrations*.apk \
