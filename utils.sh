@@ -105,7 +105,6 @@ create_github_release() {
     local patchFilePath=$(find . -type f -name "revanced-patches*.jar")
     local apkFilePath=$(find . -type f -name "youtube-revanced*.apk")
     local patchFileName=$(echo "$patchFilePath" | basename)
-    local apkFileName=$(echo "$apkFilePath" | sed 's/\.[^.]*$//')
 
     local releaseData=$(cat <<EOF
 {
@@ -138,7 +137,7 @@ EOF
     local releaseId=$(echo "$newRelease" | jq -r ".id")
 
     # Upload APK file
-    local uploadUrlApk="https://uploads.github.com/repos/$repoOwner/$repoName/releases/$releaseId/assets?name=$apkFileName"
+    local uploadUrlApk="https://uploads.github.com/repos/$repoOwner/$repoName/releases/$releaseId/assets?name=$apkFilePath"
     curl -s -H "Authorization: token $accessToken" -H "Content-Type: application/zip" --data-binary @"$apkFilePath" "$uploadUrlApk" > /dev/null
 
     color_green "GitHub Release created with ID $releaseId."
