@@ -101,8 +101,8 @@ create_github_release() {
     local repoName="$3"
 
     local tagName=$(date +"%d-%m-%Y")
-    local patchFilePath=$(find . -type f -name "revanced-patches*.jar")
-    local apkFilePath=$(find . -type f -name "youtube-revanced*.apk")
+    local patchFilePath="revanced-patches*.jar"
+    local apkFilePath="youtube-revanced*.apk"
     local patchFileName=$(echo "$patchFilePath" | basename)
 
     local releaseData=$(cat <<EOF
