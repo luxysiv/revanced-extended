@@ -101,9 +101,10 @@ create_github_release() {
     local repoName="$3"
 
     local tagName=$(date +"%d-%m-%Y")
-    local patchFilePath="revanced-patches*.jar"
-    local apkFilePath="youtube-revanced*.apk"
+    local patchFilePath=$(find . -type f -name "revanced-patches*.jar")
+    local apkFilePath=$(find . -type f -name "youtube-revanced*.apk")
     local patchFileName=$(echo "$patchFilePath" | basename)
+    local apkFileName=$(echo "$apkFilePath" | basename).apk
 
     local releaseData=$(cat <<EOF
 {
@@ -120,8 +121,6 @@ EOF
         exit
     fi
 
-    echo "APK File Name: $apkFilePath"
-    
     # Check if the release with the same tag already exists
     local existingRelease=$(curl -s -H "Authorization: token $accessToken" "https://api.github.com/repos/$repoOwner/$repoName/releases/tags/$tagName")
 
@@ -138,7 +137,7 @@ EOF
     local releaseId=$(echo "$newRelease" | jq -r ".id")
 
     # Upload APK file
-    local uploadUrlApk="https://uploads.github.com/repos/$repoOwner/$repoName/releases/$releaseId/assets?name=$apkFilePath"
+    local uploadUrlApk="https://uploads.github.com/repos/$repoOwner/$repoName/releases/$releaseId/assets?name=$apkFileName"
     curl -s -H "Authorization: token $accessToken" -H "Content-Type: application/zip" --data-binary @"$apkFilePath" "$uploadUrlApk" > /dev/null
 
     color_green "GitHub Release created with ID $releaseId."
