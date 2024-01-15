@@ -120,6 +120,8 @@ EOF
         exit
     fi
 
+    echo "APK File Name: $apkFilePath"
+    
     # Check if the release with the same tag already exists
     local existingRelease=$(curl -s -H "Authorization: token $accessToken" "https://api.github.com/repos/$repoOwner/$repoName/releases/tags/$tagName")
 
