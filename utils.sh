@@ -1,5 +1,9 @@
 #!/bin/bash
 
+basename() {
+    sed 's/.*\///' | sed 's/\.[^.]*$//'
+}
+
 req() {
     wget -nv -O "$2" --header="Authorization: token $accessToken" "$1"
 }
@@ -13,23 +17,18 @@ download_repository_assets() {
     local assetUrls=$(echo "$response" | jq -r --arg repoName "$repoName" '.assets[] | select(.name | contains($repoName)) | .browser_download_url, .name')
 
     while read -r downloadUrl && read -r assetName; do
-        color_green "Downloading asset: $assetName from: $downloadUrl"
         req "$downloadUrl" "$assetName"
     done <<< "$assetUrls"
 }
 
 download_youtube_apk() {
-    local ytUrl=$1
-    local version=$(echo "$ytUrl" | grep -oP '\d+(\.\d+)+')
-    local youtubeDownloadUrl="$(echo $ytUrl | sed 's/0$/1/')"
-    local assetName="youtube-v$version.apk"
-    color_green "Downloading YouTube APK from: $youtubeDownloadUrl"
-    req "$youtubeDownloadUrl" "$assetName"
+    package_info=$(java -jar revanced-cli*.jar list-versions -f com.google.android.youtube revanced-patches*.jar)    
+    version=$(echo "$package_info" | grep -oP '\d+(\.\d+)+' | sort -ur | sed -n '1p')
+    chmod +x dl_yt && ./dl_yt $version
 }
 
 apply_patches() {
     version=$1
-    ytUrl=$2
     
     # Read patches from file
     mapfile -t lines < ./patches.txt
@@ -43,22 +42,19 @@ apply_patches() {
         fi
     done
 
-    # Apply patches using Revanced tools 
-    color_green "Patching..."
+    # Apply patches using Revanced tools
     java -jar revanced-cli*.jar patch \
         --merge revanced-integrations*.apk \
         --patch-bundle revanced-patches*.jar \
         "${excludePatches[@]}" "${includePatches[@]}" \
         --out "patched-youtube-v$version.apk" \
         "youtube-v$version.apk"
-    color_green "Done"
 }
 
 sign_patched_apk() {
     version=$1
     
     # Sign the patched APK
-    color_green "Sign APK"
     apksigner=$(find $ANDROID_SDK_ROOT/build-tools -name apksigner -type f | sort -r | head -n 1)
     $apksigner sign --ks public.jks \
         --ks-key-alias public \
@@ -66,34 +62,6 @@ sign_patched_apk() {
         --key-pass pass:public \
         --in "patched-youtube-v$version.apk" \
         --out "youtube-revanced-extended-v$version.apk"
-    color_green "Done"
-}
-
-update_version_file() {
-    version=$1
-    
-    # Obtain highest supported version information using revanced-cli
-    packageInfo=$(java -jar revanced-cli*.jar list-versions -f com.google.android.youtube revanced-patches*.jar)
-    highestSupportedVersion=$(echo "$packageInfo" | grep -oP '\d+(\.\d+)+' | sort -r | head -n 1)
-
-    # Remove all lines containing version information
-    > version.txt
-    
-    # Write highest supported version to version.txt
-    if [[ "$highestSupportedVersion" == "$version" ]]; then
-        echo "Same $highestSupportedVersion version" >> version.txt
-    elif [[ "$highestSupportedVersion" != "$version" ]]; then
-        echo "Supported version is $highestSupportedVersion, Please update!" >> version.txt
-    fi
-}
-
-upload_to_github() {
-    wget -nv -O "dl_yt" "https://github.com/manhd89/dl_yt/releases/download/all/dl_yt"
-    git config --global user.email "$GITHUB_ACTOR_ID+$GITHUB_ACTOR@users.noreply.github.com" > /dev/null
-    git config --global user.name "$(gh api "/users/$GITHUB_ACTOR" | jq -r '.name')" > /dev/null
-    git add dl_yt > /dev/null
-    git commit -m "Add dl_yt" --author=. > /dev/null
-    git push origin main > /dev/null
 }
 
 create_github_release() {
@@ -109,7 +77,6 @@ create_github_release() {
 
     # Only release with APK file
     if [ ! -f "$apkFilePath" ]; then
-        color_red "APK file not found. Exiting."
         exit
     fi
 
@@ -121,7 +88,6 @@ create_github_release() {
 
         # If the release exists, delete it
         wget -q --method=DELETE --header="Authorization: token $accessToken" "https://api.github.com/repos/$repoOwner/$repoName/releases/$existingReleaseId" -O /dev/null
-        color_green "Existing release deleted with tag $tagName."
     fi
 
     # Create a new release
@@ -137,8 +103,6 @@ create_github_release() {
     # Upload APK file
     local uploadUrlApk="https://uploads.github.com/repos/$repoOwner/$repoName/releases/$releaseId/assets?name=$apkFileName"
     wget -q --header="Authorization: token $accessToken" --header="Content-Type: application/zip" --post-file="$apkFilePath" -O /dev/null "$uploadUrlApk"
-
-    color_green "GitHub Release created with ID $releaseId."
 }
 
 check_release_body() {
@@ -151,16 +115,4 @@ check_release_body() {
     else
         return 1
     fi
-}
-
-color_green() {
-    echo -e "\e[92m[+] $1\e[0m"
-}
-
-color_red() {
-    echo -e "\e[91m[+] $1\e[0m"
-}
-
-basename() {
-    sed 's/.*\///' | sed 's/\.[^.]*$//'
 }
