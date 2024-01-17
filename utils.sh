@@ -46,6 +46,7 @@ apply_patches() {
     java -jar revanced-cli*.jar patch \
         --merge revanced-integrations*.apk \
         --patch-bundle revanced-patches*.jar \
+        --keystore public.jks \
         "${excludePatches[@]}" "${includePatches[@]}" \
         --out "patched-youtube-v$version.apk" \
         "youtube-v$version.apk"
