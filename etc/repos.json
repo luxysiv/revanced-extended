@@ -1,0 +1,17 @@
+[
+    {
+        "user": "inotia00",
+        "repo": "revanced-cli",
+        "tag": "latest"
+    },
+    {
+        "user": "inotia00",
+        "repo": "revanced-patches",
+        "tag": "latest"
+    },
+    {
+        "user": "inotia00",
+        "repo": "revanced-integrations",
+        "tag": "latest"
+    }
+]
