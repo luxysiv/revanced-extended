@@ -1,5 +1,8 @@
 [
     {
+        "name": "revanced-extended"
+    },
+    {
         "user": "inotia00",
         "repo": "revanced-cli",
         "tag": "latest"
