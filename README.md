@@ -5,6 +5,4 @@
 
 
 **Note**
- - YouTube APK source: [YouTube - APKmirror](https://www.apkmirror.com/apk/google-inc/youtube/youtube)
-
- - Because of the validity of [APKmirror](https://www.apkmirror.com), I downloaded the YouTube APK from [APKmirror](https://www.apkmirror.com) and uploaded it to [Dropbox](https://www.dropbox.com).
+ - Change build resource in [./etc/config.json](./etc/config.json)
