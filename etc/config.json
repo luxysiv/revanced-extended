@@ -1,6 +1,6 @@
 [
     {
-        "name": "revanced-extended"
+        "name": "ReX"
     },
     {
         "user": "inotia00",
@@ -8,13 +8,13 @@
         "tag": "latest"
     },
     {
-        "user": "inotia00",
-        "repo": "revanced-patches",
+        "user": "YT-Advanced",
+        "repo": "ReX-patches",
         "tag": "latest"
     },
     {
-        "user": "inotia00",
-        "repo": "revanced-integrations",
+        "user": "YT-Advanced",
+        "repo": "ReX-integrations",
         "tag": "latest"
     }
 ]
