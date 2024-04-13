@@ -1,8 +1,5 @@
 name: Patch Revanced 
 on:
-  push:
-  schedule:
-    - cron: "0 10 * * *"
   workflow_dispatch:
     
 jobs:
@@ -20,7 +17,7 @@ jobs:
       uses: actions/checkout@main
 
     - name: Patch Revanced
-      run: chmod +x revanced && ./revanced
+      run: bash revanced.sh
              
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@v2
