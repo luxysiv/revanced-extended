@@ -18,8 +18,8 @@ get_supported_version() {
 }
 
 download_resources() {
-    local githubApiUrl="https://api.github.com/repos/inotia00/$repo/releases/latest"
     for repo in revanced-patches revanced-cli revanced-integrations; do
+        githubApiUrl="https://api.github.com/repos/inotia00/$repo/releases/latest"
         assetUrls=$(req - "$githubApiUrl" | jq -r '.assets[] | "\(.browser_download_url) \(.name)"')
         while read -r downloadUrl && read -r assetName; do
             req "$assetName" "$downloadUrl" 
