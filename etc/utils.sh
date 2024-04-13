@@ -14,21 +14,17 @@ get_latest_version() {
 }
 
 get_supported_version() {
-    jq -r --arg pkg_name "$1" '.. | objects | select(.name == "\($pkg_name)" and .versions != null) | .versions[-1]' | uniq
+    jq -r --arg pkg_name "$1" '.. | objects | select(.name == "\($pkg_name)" and .versions != null) | .versions[-1]' patches.json | uniq
 }
 
 download_resources() {
-    local revancedApiUrl="https://releases.revanced.app/tools"
-    local response=$(req - 2>/dev/null "$revancedApiUrl")
-
-    local assetUrls=$( \
-        echo "$response" | \
-        jq -r '.tools[] | select(.name | test("revanced-(patches|cli).*jar$|revanced-integrations.*apk$")) | .browser_download_url, .name' \
-    )
-
-    while read -r downloadUrl && read -r assetName; do
-        req "$assetName" "$downloadUrl" 
-    done <<< "$assetUrls"
+    local githubApiUrl="https://api.github.com/repos/inotia00/$repo/releases/latest"
+    for repo in revanced-patches revanced-cli revanced-integrations; do
+        assetUrls=$(req - "$githubApiUrl" | jq -r '.assets[] | "\(.browser_download_url) \(.name)"')
+        while read -r downloadUrl && read -r assetName; do
+            req "$assetName" "$downloadUrl" 
+        done <<< "$assetUrls"
+    done
 }
 
 get_apkmirror_version() {
