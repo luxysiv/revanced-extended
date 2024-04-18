@@ -1,8 +1,12 @@
-
 #!/bin/bash
+# Script make by Mạnh Dương
+
+gh_req() {
+    wget -qO- --header="Authorization: token $GITHUB_TOKEN" "$@"
+}
 
 req() {
-    wget -nv -O "$1" "$2" \
+    wget -nv -O "$@" \
     --header="User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) \
                           AppleWebKit/537.36 (HTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36" \
     --header="Authorization: Basic YXBpLWFwa3VwZGF0ZXI6cm01cmNmcnVVakt5MDRzTXB5TVBKWFc4" \
@@ -20,13 +24,13 @@ get_supported_version() {
 download_resources() {
     for repo in revanced-patches revanced-cli revanced-integrations; do
         githubApiUrl="https://api.github.com/repos/inotia00/$repo/releases/latest"
-        assetUrls=$(req - "$githubApiUrl" | jq -r '.assets[] | "\(.browser_download_url) \(.name)"')
+        page=$(req - 2>/dev/null $githubApiUrl)
+        assetUrls=$(echo $page | jq -r '.assets[] | select(.name | endswith(".asc") | not) | "\(.browser_download_url) \(.name)"')
         while read -r downloadUrl assetName; do
             req "$assetName" "$downloadUrl" 
         done <<< "$assetUrls"
     done
 }
-
 get_apkmirror_version() {
     grep 'fontBlack' | sed -n 's/.*>\(.*\)<\/a> <\/h5>.*/\1/p' | sed 20q
 }
@@ -50,7 +54,7 @@ uptodown() {
     name=$1 package=$2
     version=$(get_supported_version "$package")
     url="https://$name.en.uptodown.com/android/versions"
-    version="${version:-$(req - 2>/dev/null "$url" | sed -n 's/.*class="version">\([^<]*\)<.*/\1/p' | get_latest_version)}"
+    version="${version:-$(req - 2>/dev/null $url | sed -n 's/.*class="version">\([^<]*\)<.*/\1/p' | get_latest_version)}"
     url=$(req - $url | tr '\n' ' ' \
                      | sed -n 's/.*data-url="\([^"]*\)".*'$version'<\/span>[^@]*@\([^<]*\).*/\1/p' \
                      | sed 's#/download/#/post-download/#g')
@@ -109,8 +113,33 @@ sign_patched_apk() {
     unset version
 }
 
+create_body_release() {
+    body=$(cat <<EOF
+# Release Notes
+
+## Build Tools:
+- **ReVanced Patches:** v$patchver
+- **ReVanced Integrations:** v$integrationsver
+- **ReVanced CLI:** v$cliver
+
+## Note:
+**mMicroG** is **necessary** to work. 
+- Please **download** it from [HERE](https://github.com/inotia00/mMicroG/releases/latest).
+EOF
+)
+
+    releaseData=$(jq -n \
+      --arg tag_name "$tagName" \
+      --arg target_commitish "main" \
+      --arg name "Revanced Extended $tagName" \
+      --arg body "$body" \
+      '{ tag_name: $tag_name, target_commitish: $target_commitish, name: $name, body: $body }')
+}
+
 create_github_release() {
     name="$1"
+    apiReleases="https://api.github.com/repos/$GITHUB_REPOSITORY/releases"
+    uploadRelease="https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases"
     apkFilePath=$(find . -type f -name "$name-revanced*.apk")
     apkFileName=$(basename "$apkFilePath")
     patchver=$(ls -1 revanced-patches*.jar | grep -oP '\d+(\.\d+)+')
@@ -118,54 +147,27 @@ create_github_release() {
     cliver=$(ls -1 revanced-cli*.jar | grep -oP '\d+(\.\d+)+')
     tagName="v$patchver"
 
-    # Only release with APK file
     if [ ! -f "$apkFilePath" ]; then
         exit
     fi
 
-    # Check if the release with the same tag already exists
-    existingRelease=$( \
-        wget -qO- \
-        --header="Authorization: token $accessToken" \
-        "https://api.github.com/repos/$repoOwner/$repoName/releases/tags/$tagName" \
-    )
+    existingRelease=$(gh_req "$apiReleases/tags/$tagName")
 
     if [ -n "$existingRelease" ]; then
         existingReleaseId=$(echo "$existingRelease" | jq -r ".id")
+        uploadUrlApk="$uploadRelease/$existingReleaseId/assets?name=$apkFileName"
 
-        uploadUrlApk="https://uploads.github.com/repos/$repoOwner/$repoName/releases/$existingReleaseId/assets?name=$apkFileName"
+        for existingAsset in $(echo "$existingRelease" | jq -r '.assets[].name'); do
+            [ "$existingAsset" == "$apkFileName" ] && \
+                assetId=$(echo "$existingRelease" | jq -r '.assets[] | select(.name == "'"$apkFileName"'") | .id') && \
+                gh_req --method=DELETE "$apiReleases/assets/$assetId"
+        done
     else
-        # Create a new release
-        body="# Build Tools:"
-        body+="\n - **ReVanced Patches:** *v$patchver*"
-        body+="\n - **ReVanced Integrations:** *v$integrationsver*"
-        body+="\n - **ReVanced CLI:** *v$cliver*"
-        body+="\n\n# Note:"
-        body+="\n**mMicroG** is **necessary** to work"
-        body+="\n - Click [HERE](https://github.com/inotia00/mMicroG/releases/latest) to **download**"
-        local releaseData='{
-            "tag_name": "'$tagName'",
-            "target_commitish": "main",
-            "name": "Revanced Extended '$tagName'",
-            "body": "'$body'"
-        }'
-            
-        newRelease=$( \
-            wget -qO- \
-            --post-data="$releaseData" \
-            --header="Authorization: token $accessToken" \
-            --header="Content-Type: application/json" \
-            "https://api.github.com/repos/$repoOwner/$repoName/releases" \
-        )
+        create_body_release 
+        newRelease=$(gh_req --post-data="$releaseData" --header="Content-Type: application/json" "$apiReleases")
         releaseId=$(echo "$newRelease" | jq -r ".id")
-
-        uploadUrlApk="https://uploads.github.com/repos/$repoOwner/$repoName/releases/$releaseId/assets?name=$apkFileName"
+        uploadUrlApk="$uploadRelease/$releaseId/assets?name=$apkFileName"
     fi
 
-    # Upload APK file
-    wget -q \
-        --header="Authorization: token $accessToken" \
-        --header="Content-Type: application/zip" \
-        --post-file="$apkFilePath" \
-        -O /dev/null "$uploadUrlApk"
+    gh_req &>/dev/null --header="Content-Type: application/zip" --post-file="$apkFilePath" "$uploadUrlApk"
 }
