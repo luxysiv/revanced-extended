@@ -19,12 +19,13 @@ get_latest_version() {
 }
 
 get_supported_version() {
-    jq -r '.. | objects | select(.name == "'$1'" and .versions != null) | .versions[-1]' patches.json | uniq
+    pkg_name="$1"
+    jq -r '.. | objects | select(.name == "'$pkg_name'" and .versions != null) | .versions[-1]' patches.json | uniq
 }
 
 download_resources() {
     for repo in revanced-patches revanced-cli revanced-integrations; do
-        githubApiUrl="https://api.github.com/repos/inotia00/$repo/releases/latest"
+        githubApiUrl="https://api.github.com/repos/revanced/$repo/releases/latest"
         page=$(req - 2>/dev/null $githubApiUrl)
         assetUrls=$(echo $page | jq -r '.assets[] | select(.name | endswith(".asc") | not) | "\(.browser_download_url) \(.name)"')
         while read -r downloadUrl assetName; do
@@ -40,7 +41,7 @@ get_apkmirror_version() {
 apkmirror() {
     org="$1" name="$2" package="$3" arch="$4" 
     local regexp='.*APK\(.*\)'$arch'\(.*\)nodpi<\/div>[^@]*@\([^<]*\)'
-    version=$(get_supported_version "$package")
+    version="${version:-$(get_supported_version "$package")}"
     url="https://www.apkmirror.com/uploads/?appcategory=$name"
     version="${version:-$(req - $url | get_apkmirror_version | get_latest_version)}"
     url="https://www.apkmirror.com/apk/$org/$name/$name-${version//./-}-release"
@@ -53,7 +54,7 @@ apkmirror() {
 # X not work (maybe more)
 uptodown() {
     name=$1 package=$2
-    version=$(get_supported_version "$package")
+    version="${version:-$(get_supported_version "$package")}"
     url="https://$name.en.uptodown.com/android/versions"
     version="${version:-$(req - 2>/dev/null $url | sed -n 's/.*class="version">\([^<]*\)<.*/\1/p' | get_latest_version)}"
     url=$(req - $url | tr '\n' ' ' \
@@ -66,7 +67,7 @@ uptodown() {
 # Tiktok not work because not available version supported 
 apkpure() {
     name=$1 package=$2
-    version=$(get_supported_version "$package")
+    version="${version:-$(get_supported_version "$package")}"
     url="https://apkpure.net/$name/$package/versions"
     version="${version:-$(req - $url | sed -n 's/.*data-dt-version="\([^"]*\)".*/\1/p' | sed 10q | get_latest_version)}"
     url="https://apkpure.net/$name/$package/download/$version"
@@ -124,15 +125,15 @@ create_body_release() {
 - **ReVanced CLI:** v$cliver
 
 ## Note:
-**mMicroG** is **necessary** to work. 
-- Please **download** it from [HERE](https://github.com/inotia00/mMicroG/releases/latest).
+**ReVancedGms** is **necessary** to work. 
+- Please **download** it from [HERE](https://github.com/revanced/gmscore/releases/latest).
 EOF
 )
 
     releaseData=$(jq -n \
       --arg tag_name "$tagName" \
       --arg target_commitish "main" \
-      --arg name "Revanced Extended $tagName" \
+      --arg name "Revanced $tagName" \
       --arg body "$body" \
       '{ tag_name: $tag_name, target_commitish: $target_commitish, name: $name, body: $body }')
 }
