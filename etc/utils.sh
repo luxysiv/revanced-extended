@@ -30,7 +30,7 @@ get_supported_version() {
 # Download necessary resources to patch from Github latest release 
 download_resources() {
     for repo in revanced-patches revanced-cli revanced-integrations; do
-        githubApiUrl="https://api.github.com/repos/revanced/$repo/releases/latest"
+        githubApiUrl="https://api.github.com/repos/inotia00/$repo/releases/latest"
         page=$(req - 2>/dev/null $githubApiUrl)
         assetUrls=$(echo $page | jq -r '.assets[] | select(.name | endswith(".asc") | not) | "\(.browser_download_url) \(.name)"')
         while read -r downloadUrl assetName; do
@@ -135,15 +135,15 @@ create_body_release() {
 - **ReVanced CLI:** v$cliver
 
 ## Note:
-**ReVancedGms** is **necessary** to work. 
-- Please **download** it from [HERE](https://github.com/revanced/gmscore/releases/latest).
+**mMicroG** is **necessary** to work. 
+- Please **download** it from [HERE](https://github.com/inotia00/mmicrog/releases/latest).
 EOF
 )
 
     releaseData=$(jq -n \
       --arg tag_name "$tagName" \
       --arg target_commitish "main" \
-      --arg name "Revanced $tagName" \
+      --arg name "Revanced Extended $tagName" \
       --arg body "$body" \
       '{ tag_name: $tag_name, target_commitish: $target_commitish, name: $name, body: $body }')
 }
