@@ -2,8 +2,6 @@
 source ./etc/utils.sh
 
 # Main script 
-# I prefer APKmirror but some time It's failure. So I use Uptodown. 
-# APKmirror scraper still works fine
 
 # Perform download_repository_assets
 download_resources
