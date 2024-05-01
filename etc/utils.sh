@@ -163,7 +163,7 @@ create_github_release() {
         exit
     fi
 
-    existingRelease=$(req - --header="$authorization" "$apiReleases/tags/$tagName" 2>/dev/null)
+    existingRelease=$(req "$resp" "$apiReleases/tags/$tagName" 2>/dev/null)
 
     # Add more assets release with same tag name
     if [ -n "$existingRelease" ]; then
