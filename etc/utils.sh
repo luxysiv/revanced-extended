@@ -148,7 +148,7 @@ EOF
 # Release Revanced APK
 create_github_release() {
     name="$1"
-    resp="- --header=Authorization: token $GITHUB_TOKEN" 
+    res_auth=" - --header=Authorization: token $GITHUB_TOKEN" 
     apiReleases="https://api.github.com/repos/$GITHUB_REPOSITORY/releases"
     uploadRelease="https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases"
     apkFilePath=$(find . -type f -name "$name-revanced*.apk")
@@ -163,7 +163,7 @@ create_github_release() {
         exit
     fi
 
-    existingRelease=$(req "$resp" "$apiReleases/tags/$tagName" 2>/dev/null)
+    existingRelease=$(req "$res_auth" "$apiReleases/tags/$tagName" 2>/dev/null)
 
     # Add more assets release with same tag name
     if [ -n "$existingRelease" ]; then
@@ -174,7 +174,7 @@ create_github_release() {
         for existingAsset in $(echo "$existingRelease" | jq -r '.assets[].name'); do
             [ "$existingAsset" == "$apkFileName" ] && \
                 assetId=$(echo "$existingRelease" | jq -r '.assets[] | select(.name == "'"$apkFileName"'") | .id') && \
-                req "$resp" --method=DELETE "$apiReleases/assets/$assetId" 2>/dev/null
+                req "$res_auth" --method=DELETE "$apiReleases/assets/$assetId" 2>/dev/null
         done
     else
         # Make tag name
@@ -185,5 +185,5 @@ create_github_release() {
     fi
 
     # Upload file to Release 
-    req "$resp" --post-file="$apkFilePath" "$uploadUrlApk" &>/dev/null
+    req "$res_auth" --post-file="$apkFilePath" "$uploadUrlApk" &>/dev/null
 }
