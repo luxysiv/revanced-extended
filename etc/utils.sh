@@ -148,7 +148,7 @@ EOF
 # Release Revanced APK
 create_github_release() {
     name="$1"
-    res_auth=" - --header=Authorization: token $GITHUB_TOKEN" 
+    res_auth="- --header="Authorization: token $GITHUB_TOKEN"" 
     apiReleases="https://api.github.com/repos/$GITHUB_REPOSITORY/releases"
     uploadRelease="https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases"
     apkFilePath=$(find . -type f -name "$name-revanced*.apk")
