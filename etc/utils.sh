@@ -13,7 +13,6 @@ req() {
          --keep-session-cookies --timeout=10 -nv -O "$@"
 }
 
-
 # Get highest version (Just compatible with my way of getting versions code)
 get_latest_version() {
     grep -Evi 'alpha|beta' | grep -oPi '\b\d+(\.\d+)+(?:\-\w+)?(?:\.\d+)?(?:\.\w+)?\b' | sort -ur | sed -n '1p'
