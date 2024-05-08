@@ -131,8 +131,8 @@ create_body_release() {
 - **ReVanced CLI:** v$cliver
 
 ## Note:
-**mMicroG** is **necessary** to work. 
-- Please **download** it from [HERE](https://github.com/inotia00/mmicrog/releases/latest).
+**ReVancedGms** is **necessary** to work. 
+- Please **download** it from [HERE](https://github.com/revanced/gmscore/releases/latest).
 EOF
 )
 
