@@ -1,3 +1,2 @@
 - Custom branding icon YouTube
 - Custom branding name YouTube
-+ Premium heading
