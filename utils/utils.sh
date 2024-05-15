@@ -134,9 +134,9 @@ create_github_release() {
     uploadRelease="https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases"
     apkFilePath=$(find . -type f -name "$name-revanced*.apk")
     apkFileName=$(basename "$apkFilePath")
-    patchver=$(ls -1 revanced-patches*.jar | grep -oP '\d+(\.\d+)+')
-    integrationsver=$(ls -1 revanced-integrations*.apk | grep -oP '\d+(\.\d+)+')
-    cliver=$(ls -1 revanced-cli*.jar | grep -oP '\d+(\.\d+)+')
+    patchver=$(ls -1 revanced-patches*.jar | perl utils/extract_version.pl)
+    integrationsver=$(ls -1 revanced-integrations*.apk | perl utils/extract_version.pl)
+    cliver=$(ls -1 revanced-cli*.jar | perl utils/extract_version.pl)
     tagName="v$patchver"
 
     # Make sure release with APK
