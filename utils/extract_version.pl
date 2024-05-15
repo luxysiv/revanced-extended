@@ -2,8 +2,8 @@
 use strict;
 use warnings;
 
-while (<>) {
-    while (/(\d+(\.\d+)+)/g) {
-        print "$1\n";
-    }
+my $file = shift or die "Usage: $0 filename\n";
+
+while ($file =~ /(\d+(\.\d+)+)/g) {
+    print "$1\n";
 }
