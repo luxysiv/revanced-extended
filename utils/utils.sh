@@ -69,7 +69,7 @@ apply_patches() {
     # Process patches using Perl script
     includePatches=()
     excludePatches=()
-    perl perl/process_patches.pl "$name"
+    perl utils/process_patches.pl "$name"
 
     # Apply patches using Revanced tools
     java -jar revanced-cli*.jar patch \
