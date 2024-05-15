@@ -18,7 +18,7 @@ download_resources() {
     for repo in revanced-patches revanced-cli revanced-integrations; do
         githubApiUrl="https://api.github.com/repos/inotia00/$repo/releases/latest"
         page=$(req - 2>/dev/null $githubApiUrl)
-        assetUrls=$(echo $page | jq -r '.assets[] | select(.name | endswith(".asc") | not) | "\(.browser_download_url) \(.name)"')
+        assetUrls=$(echo $page | perl utils/extract_github.pl)
         while read -r downloadUrl assetName; do
             req "$assetName" "$downloadUrl" 
         done <<< "$assetUrls"
