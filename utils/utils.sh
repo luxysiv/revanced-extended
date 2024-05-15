@@ -64,17 +64,13 @@ apkpure() {
 apply_patches() {   
     name="$1"
     # Read patches from file
-    mapfile -t lines < ./etc/$name-patches.txt
+    mapfile -t lines < "./etc/$name-patches.txt"
 
-    # Process patches
-    for line in "${lines[@]}"; do
-        if [[ -n "$line" && ( ${line:0:1} == "+" || ${line:0:1} == "-" ) ]]; then
-            patch_name=$(sed -e 's/^[+|-] *//;s/ *$//' <<< "$line") 
-            [[ ${line:0:1} == "+" ]] && includePatches+=("--include" "$patch_name")
-            [[ ${line:0:1} == "-" ]] && excludePatches+=("--exclude" "$patch_name")
-        fi
-    done
-    
+    # Process patches using Perl script
+    includePatches=()
+    excludePatches=()
+    perl perl/process_patches.pl "$name"
+
     # Apply patches using Revanced tools
     java -jar revanced-cli*.jar patch \
         --merge revanced-integrations*.apk \
@@ -83,7 +79,6 @@ apply_patches() {
         --out "patched-$name-v$version.apk" \
         "$name-v$version.apk"
     rm $name-v$version.apk
-    unset excludePatches includePatches
 }
 
 # Sign APK with FOSS keystore(https://github.com/tytydraco/public-keystore)
