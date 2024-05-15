@@ -28,7 +28,7 @@ download_resources() {
 # Best but sometimes not work because APKmirror protection 
 apkmirror() {
     org="$1" name="$2" package="$3" arch="${4:-universal}" dpi="${5:-nodpi}"
-    version=$(cat patches.json | perl utils/extract_supported_version.pl "$package")
+    version="${version:-$(cat patches.json | perl utils/extract_supported_version.pl "$package")}"
     url="https://www.apkmirror.com/uploads/?appcategory=$name"
     version="${version:-$(req - $url | perl utils/apkmirror_versions.pl | perl utils/largest_version.pl)}"
     url="https://www.apkmirror.com/apk/$org/$name/$name-${version//./-}-release"
@@ -41,7 +41,8 @@ apkmirror() {
 # X not work (maybe more)
 uptodown() {  
     name=$1 package=$2
-    version=$(cat patches.json | perl utils/extract_supported_version.pl "$package")    url="https://$name.en.uptodown.com/android/versions"
+    version="${version:-$(cat patches.json | perl utils/extract_supported_version.pl "$package")}"
+    url="https://$name.en.uptodown.com/android/versions"
     version="${version:-$(req - 2>/dev/null $url | perl utils/uptodown_latest_version.pl)}"
     url=$(req - $url | perl utils/uptodown_dl_page.pl $version)
     url=$(req - $url | perl utils/uptodown_final_link.pl)
@@ -52,7 +53,7 @@ uptodown() {
 apkpure() {   
     name=$1 package=$2
     url="https://apkpure.net/$name/$package/versions"
-    version=$(cat patches.json | perl utils/extract_supported_version.pl "$package")
+    version="${version:-$(cat patches.json | perl utils/extract_supported_version.pl "$package")}"
     version="${version:-$(req - $url | perl utils/apkpure_latest_version.pl)}"
     url="https://apkpure.net/$name/$package/download/$version"
     url=$(req - $url | perl utils/apkpure_dl_link.pl $package)
