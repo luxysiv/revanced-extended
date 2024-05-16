@@ -43,3 +43,4 @@ sub sign_patched_apk {
 my ($name, $version) = @ARGV;
 die "Usage: $0 name version\n" unless $name && $version;
 sign_patched_apk($name, $version);
+undef‎ $version;
