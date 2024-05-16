@@ -34,6 +34,7 @@ sub sign_patched_apk {
             . "--out $output_apk";
 
     system($cmd) == 0 or die "Failed to sign APK: $!";
+    undef $version;
 }
 
 # Call the function with arguments
