@@ -34,13 +34,9 @@ sub sign_patched_apk {
             . "--out $output_apk";
 
     system($cmd) == 0 or die "Failed to sign APK: $!";
-    
-    # Remove the original patched APK file
-    unlink $input_apk or warn "Could not unlink $input_apk: $!";
 }
 
 # Call the function with arguments
 my ($name, $version) = @ARGV;
 die "Usage: $0 name version\n" unless $name && $version;
 sign_patched_apk($name, $version);
-undef‎ $version;
