@@ -17,8 +17,7 @@ req() {
 download_resources() {
     for repo in revanced-patches revanced-cli revanced-integrations; do
         githubApiUrl="https://api.github.com/repos/inotia00/$repo/releases/latest"
-        page=$(req - 2>/dev/null $githubApiUrl)
-        assetUrls=$(echo $page | perl utils/extract_github.pl)
+        assetUrls=$(req - 2>/dev/null $githubApiUrl | perl utils/extract_github.pl)
         while read -r downloadUrl assetName; do
             req "$assetName" "$downloadUrl" 
         done <<< "$assetUrls"
@@ -61,24 +60,19 @@ apkpure() {
 }
 
 # Apply patches with Include and Exclude Patches
-apply_patches() {   
-    name="$1"
-    # Read patches from file
-    mapfile -t lines < "./etc/$name-patches.txt"
-
-    # Process patches using Perl script
-    includePatches=()
-    excludePatches=()
-    perl utils/process_patches.pl "$name"
-
-    # Apply patches using Revanced tools
+apply_patches() {
+    name="$1"    
+    mapfile -t optionsPatches < <(perl utils/process_patches.pl "$name")
+    
+    # Apply patches using CLI
     java -jar revanced-cli*.jar patch \
         --merge revanced-integrations*.apk \
         --patch-bundle revanced-patches*.jar \
-        "${excludePatches[@]}" "${includePatches[@]}" \
+        "${optionsPatches[@]}" \
         --out "patched-$name-v$version.apk" \
         "$name-v$version.apk"
-    rm $name-v$version.apk
+    rm "$name-v$version.apk"
+    unset optionsPatches
 }
 
 # Sign APK with FOSS keystore(https://github.com/tytydraco/public-keystore)
@@ -108,7 +102,7 @@ create_body_release() {
 - **ReVanced CLI:** v$cliver
 
 ## Note:
-**ReVancedGms** is **necessary** to work. 
+**ReVanced GmsCore** is **necessary** to work. 
 - Please **download** it from [HERE](https://github.com/revanced/gmscore/releases/latest).
 EOF
 )
