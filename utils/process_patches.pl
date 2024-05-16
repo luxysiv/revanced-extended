@@ -3,35 +3,57 @@
 use strict;
 use warnings;
 
+# Function to process patches
 sub process_patches {
-    my ($name, $lines_ref, $include_ref, $exclude_ref) = @_;
-
-    foreach my $line (@$lines_ref) {
-        if ($line =~ /^[+\-]\s*(\S+)/) {
-            my $patch_name = $1;
-            if ($line =~ /^\+/) {
-                push @$include_ref, "--include", $patch_name;
-            } elsif ($line =~ /^\-/) {
-                push @$exclude_ref, "--exclude", $patch_name;
-            }
+    my ($name) = @_;
+    
+    my $filename = "./etc/${name}-patches.txt";
+    
+    # Read patches from the file
+    open(my $fh, '<', $filename) or die "Cannot open file '$filename': $!";
+    
+    my @lines = <$fh>;
+    close $fh;
+    
+    chomp @lines;
+    
+    # Initialize includePatches and excludePatches arrays
+    my @includePatches;
+    my @excludePatches;
+    
+    # Process patches
+    foreach my $line (@lines) {
+        next unless $line =~ /^[+\-]/;  # Skip lines that don't start with + or -
+        
+        # Remove the + or - sign and surrounding whitespace to get the patch name
+        my $patch_name = $line;
+        $patch_name =~ s/^[+\-]\s*//;
+        
+        # Add patch name to the corresponding array
+        if ($line =~ /^\+/) {
+            push @includePatches, $patch_name;
+        } elsif ($line =~ /^-/) {
+            push @excludePatches, $patch_name;
         }
     }
+    
+    return (\@includePatches, \@excludePatches);
 }
 
-# Main script
-my $name = $ARGV[0];
-open(my $fh, '<', "./etc/$name-patches.txt") or die "Cannot open file: $!";
-my @lines = <$fh>;
-close($fh);
+# Get the argument from the command line
+my $name = shift @ARGV or die "Please provide the file name (excluding '-patches.txt') as a command line argument.\n";
 
-my @include_patches;
-my @exclude_patches;
+# Call process_patches function with the command line argument
+my ($include_ref, $exclude_ref) = process_patches($name);
 
-process_patches($name, \@lines, \@include_patches, \@exclude_patches);
+# Access the arrays to use the results
+my @includePatches = @{$include_ref};
+my @excludePatches = @{$exclude_ref};
 
-# Output processed patches (for debugging)
-print "Include patches:\n";
-print join("\n", @include_patches), "\n";
-
-print "Exclude patches:\n";
-print join("\n", @exclude_patches), "\n";
+# Print the patches to be included and excluded
+foreach my $patch (@includePatches) {
+    print "--include=$patch\n";
+}
+foreach my $patch (@excludePatches) {
+    print "--exclude=$patch\n";
+}
