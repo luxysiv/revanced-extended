@@ -2,18 +2,42 @@
 use strict;
 use warnings;
 use JSON;
+use File::Temp qw(tempfile);
 
-# Read the JSON data from standard input
-my $json_text = do { local $/; <STDIN> };
+sub req {
+    my ($url, $output) = @_;
+    
+    my $command = "wget -nv -O \"$output\" \"$url\"";
+    system($command) == 0
+        or die "Failed to execute $command: $?";
+}
 
-# Decode the JSON data
-my $data = decode_json($json_text);
+sub download_resources {
+    my @repos = qw(revanced-patches revanced-cli revanced-integrations);
 
-# Extract download links and assets name
-foreach my $asset (@{$data->{assets}}) {
-    my $name = $asset->{name};
-    if ($name !~ /\.asc$/) {
-        my $url = $asset->{browser_download_url};
-        print "$url $name\n";
+    foreach my $repo (@repos) {
+        my $github_api_url = "https://api.github.com/repos/inotia00/$repo/releases/latest";
+        my ($fh, $tempfile) = tempfile();
+
+        req($github_api_url, $tempfile);
+
+        open my $json_fh, '<', $tempfile or die "Could not open temporary file: $!";
+        my $content = do { local $/; <$json_fh> };
+        close $json_fh;
+
+        my $release_data = decode_json($content);
+        for my $asset (@{$release_data->{assets}}) {
+            my $asset_name = $asset->{name};
+            
+            # Skip files with .asc extension
+            next if $asset_name =~ /\.asc$/;
+
+            my $download_url = $asset->{browser_download_url};
+            req($download_url, $asset_name);
+        }
+
+        unlink $tempfile; # Remove the temporary JSON file
     }
 }
+
+download_resources();
