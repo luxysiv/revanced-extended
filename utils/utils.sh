@@ -3,14 +3,8 @@
 
 # Make requests like send from Firefox Android 
 req() {
-    wget --header="User-Agent: Mozilla/5.0 (Android 13; Mobile; rv:125.0) Gecko/125.0 Firefox/125.0" \
-         --header="Content-Type: application/octet-stream" \
-         --header="Accept-Language: en-US,en;q=0.9" \
-         --header="Connection: keep-alive" \
-         --header="Upgrade-Insecure-Requests: 1" \
-         --header="Cache-Control: max-age=0" \
-         --header="Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8" \
-         --keep-session-cookies --timeout=30 -nv -O "$@"
+    wget -qO- --header="Authorization: token $GITHUB_TOKEN" \
+              --header="Content-Type: application/octet-stream" "$@"
 }
 
 # Make body Release 
@@ -40,42 +34,36 @@ EOF
 # Release Revanced APK
 github_release() {
     name="$1"
-    authorization="Authorization: token $GITHUB_TOKEN" 
     apiReleases="https://api.github.com/repos/$GITHUB_REPOSITORY/releases"
     uploadRelease="https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases"
     apkFilePath=$(find . -type f -name "$name-revanced*.apk")
     apkFileName=$(basename "$apkFilePath")
-    patchver=$(perl utils/extract_version.pl "revanced-patches*.jar")
-    integrationsver=$(perl utils/extract_version.pl "revanced-integrations*.apk")
-    cliver=$(perl utils/extract_version.pl "revanced-cli*.jar")
+    patchver=$(ls -1 revanced-patches*.jar | grep -oP '\d+(\.\d+)+')
+    integrationsver=$(ls -1 revanced-integrations*.apk | grep -oP '\d+(\.\d+)+')
+    cliver=$(ls -1 revanced-cli*.jar | grep -oP '\d+(\.\d+)+')
     tagName="v$patchver"
 
-    # Make sure release with APK
     if [ ! -f "$apkFilePath" ]; then
         exit
     fi
 
-    existingRelease=$(req - --header="$authorization" "$apiReleases/tags/$tagName" 2>/dev/null)
+    existingRelease=$(req "$apiReleases/tags/$tagName")
 
-    # Add more assets release with same tag name
     if [ -n "$existingRelease" ]; then
         existingReleaseId=$(echo "$existingRelease" | jq -r ".id")
         uploadUrlApk="$uploadRelease/$existingReleaseId/assets?name=$apkFileName"
 
-        # Delete assest release if same name upload 
         for existingAsset in $(echo "$existingRelease" | jq -r '.assets[].name'); do
             [ "$existingAsset" == "$apkFileName" ] && \
                 assetId=$(echo "$existingRelease" | jq -r '.assets[] | select(.name == "'"$apkFileName"'") | .id') && \
-                req - --header="$authorization" --method=DELETE "$apiReleases/assets/$assetId" 2>/dev/null
+                req --method=DELETE "$apiReleases/assets/$assetId"
         done
     else
-        # Make tag name
         create_body_release 
-        newRelease=$(req - --header="$authorization" --post-data="$releaseData" "$apiReleases")
+        newRelease=$(req --post-data="$releaseData" "$apiReleases")
         releaseId=$(echo "$newRelease" | jq -r ".id")
         uploadUrlApk="$uploadRelease/$releaseId/assets?name=$apkFileName"
     fi
 
-    # Upload file to Release 
-    req - &>/dev/null --header="$authorization" --post-file="$apkFilePath" "$uploadUrlApk"
+    req &>/dev/null --post-file="$apkFilePath" "$uploadUrlApk"
 }
