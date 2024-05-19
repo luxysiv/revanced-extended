@@ -16,9 +16,46 @@ sub get_env_var {
 # Subroutine to process patches
 sub process_patches {
     my ($name) = @_;
-    my @optionsPatches = `perl utils/process_patches.pl $name`;
-    chomp @optionsPatches;
-    return @optionsPatches;
+    
+    my $filename = "./etc/${name}-patches.txt";
+    
+    # Read patches from the file
+    open(my $fh, '<', $filename) or die "Cannot open file '$filename': $!";
+    
+    my @lines = <$fh>;
+    close $fh;
+    
+    chomp @lines;
+    
+    # Initialize includePatches and excludePatches arrays
+    my @includePatches;
+    my @excludePatches;
+    
+    # Process patches
+    foreach my $line (@lines) {
+        next unless $line =~ /^[+\-]/;  # Skip lines that don't start with + or -
+        
+        # Remove the + or - sign and surrounding whitespace to get the patch name
+        my $patch_name = $line;
+        $patch_name =~ s/^[+\-]\s*//;
+        
+        # Add patch name to the corresponding array
+        if ($line =~ /^\+/) {
+            push @includePatches, $patch_name;
+        } elsif ($line =~ /^-/) {
+            push @excludePatches, $patch_name;
+        }
+    }
+    
+    my @allPatches;
+    foreach my $patch (@includePatches) {
+        push @allPatches, "--include \"$patch\"";
+    }
+    foreach my $patch (@excludePatches) {
+        push @allPatches, "--exclude \"$patch\"";
+    }
+    
+    return @allPatches;
 }
 
 # Subroutine to find files using wildcard patterns
@@ -58,7 +95,7 @@ sub main {
     my $android_sdk_root = get_env_var('ANDROID_SDK_ROOT');
 
     # Process patches
-    my @optionsPatches = process_patches($name);
+    my @allPatches = process_patches($name);
 
     # Find necessary files
     my $cli_jar = find_files("revanced-cli*.jar");
@@ -70,7 +107,7 @@ sub main {
                   . "--merge $integrations_apk "
                   . "--patch-bundle $patches_jar "
                   . "--out patched-$name-v$version.apk "
-                  . "@optionsPatches "
+                  . join(" ", @allPatches) . " "
                   . "$name-v$version.apk";
     execute_cmd($patch_cmd);
 
