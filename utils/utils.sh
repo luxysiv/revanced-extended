@@ -13,49 +13,6 @@ req() {
          --keep-session-cookies --timeout=30 -nv -O "$@"
 }
 
-# Best but sometimes not work because APKmirror protection 
-apkmirror() {
-    org="$1" name="$2" package="$3" arch="${4:-universal}" dpi="${5:-nodpi}"
-    version="${version:-$(cat patches.json | perl utils/extract_supported_version.pl "$package")}"
-    url="https://www.apkmirror.com/uploads/?appcategory=$name"
-    version="${version:-$(req - $url | perl utils/apkmirror_versions.pl | perl utils/largest_version.pl)}"
-    url="https://www.apkmirror.com/apk/$org/$name/$name-${version//./-}-release"
-    url=$(req - $url | perl utils/apkmirror_dl_page.pl $dpi $arch)
-    url=$(req - $url | perl utils/apkmirror_dl_link.pl)
-    url=$(req - $url | perl utils/apkmirror_final_link.pl)
-    req $name-v$version.apk $url
-}
-
-# X not work (maybe more)
-uptodown() {  
-    name=$1 package=$2
-    version="${version:-$(cat patches.json | perl utils/extract_supported_version.pl "$package")}"
-    url="https://$name.en.uptodown.com/android/versions"
-    version="${version:-$(req - 2>/dev/null $url | perl utils/uptodown_latest_version.pl)}"
-    url=$(req - $url | perl utils/uptodown_dl_page.pl $version)
-    url=$(req - $url | perl utils/uptodown_final_link.pl)
-    req $name-v$version.apk $url
-}
-
-# Tiktok not work because not available version supported 
-apkpure() {   
-    name=$1 package=$2
-    url="https://apkpure.net/$name/$package/versions"
-    version="${version:-$(cat patches.json | perl utils/extract_supported_version.pl "$package")}"
-    version="${version:-$(req - $url | perl utils/apkpure_latest_version.pl)}"
-    url="https://apkpure.net/$name/$package/download/$version"
-    url=$(req - $url | perl utils/apkpure_dl_link.pl $package)
-    req $name-v$version.apk $url
-}
-
-# Apply patches with Include and Exclude Patches
-apply_patches() {
-    name="$1"    
-    perl utils/apply_patches.pl "$name" "$version"
-    rm patched-$name-v$version.apk
-    unset version 
-}
-
 # Make body Release 
 create_body_release() {
     body=$(cat <<EOF
