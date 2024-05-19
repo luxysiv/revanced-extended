@@ -7,15 +7,15 @@ source ./utils/utils.sh
 perl utils/github_downloader.pl
 
 # Patch YouTube 
-uptodown "youtube" \
-         "com.google.android.youtube"
-apply_patches "youtube"
+eval $(perl utils/uptodown.pl "youtube" \
+                              "com.google.android.youtube")
+perl utils/apply_patches.pl "youtube"
 github_release "youtube"
 
 # Patch YouTube Music 
-uptodown "youtube-music" \
-         "com.google.android.apps.youtube.music" 
-apply_patches "youtube-music"
+eval $(perl utils/uptodown.pl "youtube-music" \
+                              "com.google.android.apps.youtube.music")
+perl utils/apply_patches.pl "youtube-music"
 github_release "youtube-music"
 
 # You can add other apps here 
