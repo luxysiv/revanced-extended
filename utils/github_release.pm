@@ -1,4 +1,4 @@
-# Github_release.pm
+#!/usr/bin/perl
 package github_release;
 
 use strict;
