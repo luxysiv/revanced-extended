@@ -16,12 +16,18 @@ use github_downloader qw(download_resources);
 download_resources();
 
 # Patch YouTube
-uptodown("youtube", "com.google.android.youtube");
+uptodown(
+    "youtube",
+    "com.google.android.youtube"
+);
 apply_patches("youtube");
 github_release("youtube");
 
 # Patch YouTube Music 
-uptodown("youtube-music", "com.google.android.apps.youtube.music");
+uptodown(
+    "youtube-music",
+    "com.google.android.apps.youtube.music"
+);
 apply_patches("youtube-music");
 github_release("youtube-music");
 
