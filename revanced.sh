@@ -10,12 +10,12 @@ perl utils/github_downloader.pl
 eval $(perl utils/uptodown.pl "youtube" \
                               "com.google.android.youtube")
 perl utils/apply_patches.pl "youtube"
-github_release "youtube"
+perl utils/github_release.pl "youtube"
 
 # Patch YouTube Music 
 eval $(perl utils/uptodown.pl "youtube-music" \
                               "com.google.android.apps.youtube.music")
 perl utils/apply_patches.pl "youtube-music"
-github_release "youtube-music"
+perl utils/github_release.pl "youtube-music"
 
 # You can add other apps here 
