@@ -1,4 +1,4 @@
-# github_downloader.pm
+#!/usr/bin/perl
 package github_downloader;
 
 use strict;
