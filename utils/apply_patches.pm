@@ -1,4 +1,4 @@
-# apply_patches.pm
+#!/usr/bin/perl
 package apply_patches;
 
 use strict;
