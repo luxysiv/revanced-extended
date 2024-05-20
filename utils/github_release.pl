@@ -54,6 +54,18 @@ sub find_file {
     return @files ? $files[0] : undef;
 }
 
+# Function to extract version from filename
+sub extract_version {
+    my ($pattern) = @_;
+    my $file = find_file($pattern);
+    if ($file) {
+        if ($file =~ /(\d+\.\d+\.\d+)/) {
+            return $1;
+        }
+    }
+    return undef;
+}
+
 # Function to create or update a GitHub release and upload the APK
 sub github_release {
     my ($name) = @_;
@@ -70,12 +82,9 @@ sub github_release {
     }
 
     my $apk_file_name = basename($apk_file_path);
-    my $patchver = `ls -1 revanced-patches*.jar | grep -oP '\\d+(\\.\\d+)+'`;
-    chomp($patchver);
-    my $integrationsver = `ls -1 revanced-integrations*.apk | grep -oP '\\d+(\\.\\d+)+'`;
-    chomp($integrationsver);
-    my $cliver = `ls -1 revanced-cli*.jar | grep -oP '\\d+(\\.\\d+)+'`;
-    chomp($cliver);
+    my $patchver = extract_version("revanced-patches*.jar");
+    my $integrationsver = extract_version("revanced-integrations*.apk");
+    my $cliver = extract_version("revanced-cli*.jar");
     my $tag_name = "v$patchver";
 
     # Check if a release with the tag already exists
