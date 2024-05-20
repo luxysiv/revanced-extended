@@ -1,9 +1,6 @@
 #!/bin/bash
-source ./utils/utils.sh
 
-# Main script 
-
-# Perform download_repository_assets
+# Download Github releases assets 
 perl utils/github_downloader.pl
 
 # Patch YouTube 
