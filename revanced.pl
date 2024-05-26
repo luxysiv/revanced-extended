@@ -4,7 +4,7 @@ use warnings;
 use FindBin; 
 use Env;
 
-use lib "$FindBin::Bin/utils"; 
+use lib "$FindBin::Bin/utils";
 use apkpure qw(apkpure);
 use uptodown qw(uptodown);
 use apkmirror qw(apkmirror);
@@ -21,17 +21,20 @@ use github_downloader qw(download_resources);
 download_resources();
 
 # Patch YouTube
-uptodown(
-    "youtube",
+apkmirror(
+    "google-inc", 
+    "youtube", 
     "com.google.android.youtube"
 );
 apply_patches("youtube");
 github_release("youtube");
 
 # Patch YouTube Music 
-uptodown(
-    "youtube-music",
-    "com.google.android.apps.youtube.music"
+apkmirror(
+    "google-inc", 
+    "youtube-music", 
+    "com.google.android.apps.youtube.music", 
+    "arm64-v8a"
 );
 apply_patches("youtube-music");
 github_release("youtube-music");
