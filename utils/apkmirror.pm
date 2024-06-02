@@ -44,7 +44,8 @@ sub req {
         if ($output ne '-') {
             open(my $fh, '>', $output) or do {
                 $logger->error("Could not open file '$output': $!");
-                die "Could not open file '$output': $!";
+                warn "Could not open file '$output': $!";
+                return;
             };
             print $fh $response->decoded_content;
             close($fh);
@@ -55,7 +56,8 @@ sub req {
         return $response->decoded_content;
     } else {
         $logger->error("HTTP GET error: " . $response->status_line);
-        die "HTTP GET error: " . $response->status_line;
+        warn "HTTP GET error: " . $response->status_line;
+        return;
     }
 }
 
@@ -98,7 +100,8 @@ sub get_supported_version {
 
     open(my $fh, '<', $filename) or do {
         $logger->error("Could not open file '$filename': $!");
-        die "Could not open file '$filename': $!";
+        warn "Could not open file '$filename': $!";
+        return;
     };
     local $/;
     my $json_text = <$fh>;
@@ -219,7 +222,7 @@ sub apkmirror {
     }
 
     my $apk_filename = "$name-v$version.apk";
-    req($final_url, $apk_filename);
+    return req($final_url, $apk_filename);
 }
 
 1;
