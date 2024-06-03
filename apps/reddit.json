@@ -1,0 +1,15 @@
+{
+  "package": "com.reddit.frontpage",
+  "apkmirror": {
+    "org": "redditinc",
+    "name": "reddit",
+    "arch": null,
+    "dpi": null
+  },
+  "uptodown": {
+    "name": "reddit-official-app"
+  },
+  "apkpure": {
+    "name": "reddit-apk"
+  }
+}
