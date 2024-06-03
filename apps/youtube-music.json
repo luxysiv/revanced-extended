@@ -1,0 +1,15 @@
+{
+  "package": "com.google.android.apps.youtube.music",
+  "apkmirror": {
+    "org": "google-inc",
+    "name": "youtube-music",
+    "arch": "arm64-v8a",
+    "dpi" :null
+  },
+  "uptodown": {
+    "name": "youtube-music"
+  },
+  "apkpure": {
+    "name": "youtube-music"
+  }
+}
