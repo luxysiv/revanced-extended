@@ -1,18 +1,25 @@
 name: Patch Revanced 
 on:
   workflow_dispatch:
-    
+
 jobs:
   build:
-    name: Patch YouTube 
+    name: Patch Revanced 
     permissions: write-all
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
+
+    strategy:
+      matrix:
+        app: 
+          - youtube
+          - youtube-music
+          - reddit
+
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@main  
+      uses: actions/checkout@main
 
     - name: Install Perl
       uses: shogo82148/actions-setup-perl@v1
@@ -23,12 +30,4 @@ jobs:
       run: cpanm --installdeps --notest .
 
     - name: Patch Revanced
-      run: perl revanced.pl
-             
-    - name: Delete workflow runs
-      uses: Mattraks/delete-workflow-runs@v2
-      with:
-        token: ${{ github.token }}
-        repository: ${{ github.repository }}
-        retain_days: 0
-        keep_minimum_runs: 1
+      run: perl revanced.pl ${{ matrix.app }}
