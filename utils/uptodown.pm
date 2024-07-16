@@ -11,6 +11,7 @@ use HTTP::Headers;
 use Exporter 'import';
 use Log::Log4perl;
 use FindBin;
+use version;
 
 our @EXPORT_OK = qw(uptodown);
 
@@ -40,12 +41,11 @@ sub req {
 
     if ($response->is_success) {
         my $size = length($response->decoded_content);
-        my $final_url = $response->base;
+        my $final_url = $response->base; # Lấy URL phản hồi cuối cùng
         if ($output ne '-') {
             open(my $fh, '>', $output) or do {
                 $logger->error("Could not open file '$output': $!");
-                warn "Could not open file '$output': $!";
-                return;
+                die "Could not open file '$output': $!";
             };
             print $fh $response->decoded_content;
             close($fh);
@@ -56,8 +56,7 @@ sub req {
         return $response->decoded_content;
     } else {
         $logger->error("HTTP GET error: " . $response->status_line);
-        warn "HTTP GET error: " . $response->status_line;
-        return;
+        die "HTTP GET error: " . $response->status_line;
     }
 }
 
@@ -100,8 +99,7 @@ sub get_supported_version {
     
     open(my $fh, '<', $filename) or do {
         $logger->error("Could not open file '$filename': $!");
-        warn "Could not open file '$filename': $!";
-        return;
+        die "Could not open file '$filename': $!";
     };
     local $/; 
     my $json_text = <$fh>;
@@ -134,6 +132,7 @@ sub uptodown {
     my ($name, $package) = @_;
 
     my $version = $ENV{VERSION};
+    my @versions;
 
     if (!$version) {
         if (my $supported_version = get_supported_version($package)) {
@@ -146,11 +145,11 @@ sub uptodown {
             my @lines = split /\n/, $page_content;
 
             for my $line (@lines) {
-                if ($line =~ /.*class="version">(.*?)<\/div>/) {
-                    $version = "$1";
-                    last;
+                if ($line =~ /<span class="version">([\d\.]+)<\/span>/) {
+                    push @versions, version->parse($1);
                 }
             }
+            $version = (sort { $b <=> $a } @versions)[0];
             $ENV{VERSION} = $version;
         }
     }
@@ -161,7 +160,7 @@ sub uptodown {
     my @lines = split /\n/, $download_page_content;
 
     filter_lines(qr/>\s*$version\s*<\/span>/, \@lines);
-    
+
     my $download_page_url;
     for my $line (@lines) {
         if ($line =~ /.*data-url="(.*[^"]*)"/) {
@@ -172,9 +171,9 @@ sub uptodown {
     }
 
     my $final_page_content = req($download_page_url);
-    
+
     @lines = split /\n/, $final_page_content;
-    
+
     my $final_url;
     for my $line (@lines) {
         if ($line =~ /.*"post-download" data-url="([^"]*)"/) {
@@ -182,9 +181,9 @@ sub uptodown {
             last;
         }
     }
-    
+
     my $apk_filename = "$name-v$version.apk";
-    return req($final_url, $apk_filename);
+    req($final_url, $apk_filename);
 }
 
 1;
