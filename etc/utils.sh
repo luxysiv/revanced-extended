@@ -135,7 +135,7 @@ sign_patched_apk() {
         --ks-pass pass:public \
         --key-pass pass:public \
         --in "patched-$name-v$version.apk" \
-        --out "$name-revanced-v$version.apk"
+        --out "$name-revanced-extended-v$version.apk"
     rm patched-$name-v$version.apk
     unset version
 }
