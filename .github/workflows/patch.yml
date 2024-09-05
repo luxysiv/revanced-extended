@@ -1,0 +1,51 @@
+name: Patch Revanced 
+on:
+  push:
+  workflow_dispatch:
+    
+jobs:
+  build:
+    name: Patch YouTube 
+    permissions: write-all
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@main  
+
+    - name: Cache Data
+      id: cache-patches-data
+      uses: actions/cache@main
+      with:
+        path: | 
+          patches.txt
+          /usr/local/bin/pup
+        key: ${{ runner.os }}-patches-data-${{ github.run_id }}
+        restore-keys: |
+          ${{ runner.os }}-patches-data-
+
+    - name: Check if pup is installed
+      run: |
+        if [ ! -f /usr/local/bin/pup ]; then
+          echo "pup is not found. Downloading and installing..."
+          wget -q https://github.com/ericchiang/pup/releases/download/v0.4.0/pup_v0.4.0_linux_amd64.zip -O pup.zip
+          unzip pup.zip
+          sudo mv pup /usr/local/bin/
+          chmod +x /usr/local/bin/pup
+          rm pup.zip
+        else
+          echo "pup is already installed, skipping."
+        fi
+
+    - name: Patch Revanced
+      run: bash revanced.sh
+             
+    - name: Delete workflow runs
+      uses: Mattraks/delete-workflow-runs@v2
+      with:
+        token: ${{ github.token }}
+        repository: ${{ github.repository }}
+        retain_days: 0
+        keep_minimum_runs: 1
