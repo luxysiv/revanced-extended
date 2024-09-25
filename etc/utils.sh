@@ -118,26 +118,10 @@ apply_patches() {
         --merge revanced-integrations*.apk \
         --patch-bundle revanced-patches*.jar \
         "${excludePatches[@]}" "${includePatches[@]}" \
-        --out "patched-$name-v$version.apk" \
+        --out "$name-revanced-extended-v$version.apk" \
         "$name-v$version.apk"
     rm $name-v$version.apk
-    unset excludePatches includePatches
-}
-
-# Sign APK with FOSS keystore(https://github.com/tytydraco/public-keystore)
-sign_patched_apk() {   
-    name="$1"
-    # Sign the patched APK
-    apksigner=$(find $ANDROID_SDK_ROOT/build-tools -name apksigner -type f | sort -r | head -n 1)
-    $apksigner sign --verbose \
-        --ks ./etc/public.jks \
-        --ks-key-alias public \
-        --ks-pass pass:public \
-        --key-pass pass:public \
-        --in "patched-$name-v$version.apk" \
-        --out "$name-revanced-extended-v$version.apk"
-    rm patched-$name-v$version.apk
-    unset version
+    unset excludePatches includePatches version
 }
 
 # Make body Release 
