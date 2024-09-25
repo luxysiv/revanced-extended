@@ -19,7 +19,6 @@ patch_upload() {
     app_name=$1
     download_app "$app_name"
     apply_patches "$app_name"
-    sign_patched_apk "$app_name"
     create_github_release "$app_name"
 }
 
