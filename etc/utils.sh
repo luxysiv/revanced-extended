@@ -21,7 +21,7 @@ get_latest_version() {
 # Read highest supported versions from Revanced 
 get_supported_version() {
     pkg_name="$1"
-    jq -r '.. | objects | select(.name == "'$pkg_name'" and .versions != null) | .versions[-1]' patches.json | uniq
+    jq -r '.. | objects | select(.name == "'$pkg_name'" and .versions != null) | .versions[]' patches.json | sort -V | tail -n 1
 }
 
 # Download necessary resources to patch from Github latest release 
