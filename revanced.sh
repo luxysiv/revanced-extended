@@ -26,15 +26,15 @@ patch_upload() {
 get_latest_release_version() {
     local repo="$1"
     local url="https://api.github.com/repos/${repo}/releases/latest"
-    
-    # Use curl to get the latest release tag name
-    response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "$url")
-    
+
+    # Use req to get the latest release tag name, including the GitHub token in the header
+    response=$(req - --header="Authorization: token $GITHUB_TOKEN" "$url")
+
     # Check if the request was successful
     if [[ $? -eq 0 ]]; then
         # Extract the tag name from the response
         tag_name=$(echo "$response" | grep -oP '"tag_name":\s*"\K(v?[\d.]+)' | head -n 1)
-        
+
         if [[ -n "$tag_name" ]]; then
             # Extract the version from the tag (e.g., v4.16.0-release to 4.16.0)
             echo "$tag_name" | grep -oP '\d+\.\d+\.\d+'
