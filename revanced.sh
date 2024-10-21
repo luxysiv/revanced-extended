@@ -28,7 +28,7 @@ get_latest_release_version() {
     local url="https://api.github.com/repos/${repo}/releases/latest"
 
     # Use req to get the latest release tag name, including the GitHub token in the header
-    response=$(req - --header="Authorization: token $GITHUB_TOKEN" "$url")
+    response=$(req - --header="Authorization: token $GITHUB_TOKEN" "$url" 2>/dev/null)
 
     # Check if the request was successful
     if [[ $? -eq 0 ]]; then
@@ -72,5 +72,4 @@ if ! compare_repository_versions "$repo_patches" "$repository"; then
     download_resources
     patch_upload "youtube"
     patch_upload "youtube-music"
-    delete_cache
 fi
