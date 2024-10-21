@@ -19,9 +19,7 @@ jobs:
       id: cache-patches-data
       uses: actions/cache@main
       with:
-        path: | 
-          patches.txt
-          /usr/local/bin/pup
+        path: /usr/local/bin/pup
         key: ${{ runner.os }}-patches-data-${{ github.run_id }}
         restore-keys: |
           ${{ runner.os }}-patches-data-
