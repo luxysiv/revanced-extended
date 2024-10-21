@@ -16,13 +16,12 @@ jobs:
       uses: actions/checkout@main  
 
     - name: Cache Data
-      id: cache-patches-data
+      id: cache-pup
       uses: actions/cache@main
       with:
         path: /usr/local/bin/pup
-        key: ${{ runner.os }}-patches-data-${{ github.run_id }}
-        restore-keys: |
-          ${{ runner.os }}-patches-data-
+        key: ${{ runner.os }}-pup
+        restore-keys: ${{ runner.os }}-pup
 
     - name: Check if pup is installed
       run: |
