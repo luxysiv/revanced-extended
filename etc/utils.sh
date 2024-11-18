@@ -82,12 +82,32 @@ uptodown() {
     version=$(jq -r '.version' "$config_file")
     version="${version:-$(get_supported_version "$package")}"
     url="https://$name.en.uptodown.com/android/versions"
-    version="${version:-$(req - 2>/dev/null "$url" | pup 'div#versions-items-list > div span.version text{}' | get_latest_version)}"
-    url=$(req - $url | pup -p --charset utf-8 ':parent-of(span:contains("'$version'"))' \
-                     | pup -p --charset utf-8 'div[data-url]' attr{data-url} \
-                     | sed 1q)
-    url="https://dw.uptodown.com/dwn/$(req - "$url" | pup -p --charset utf-8 'button#detail-download-button attr{data-url}')"
-    req $name-v$version.apk $url
+    version="${version:-$(req - 2>/dev/null $url | grep -oP 'class="version">\K[^<]+' | get_latest_version)}"
+
+    # Fetch data_code
+    data_code=$(req - "$url" | grep 'detail-app-name' | grep -oP '(?<=data-code=")[^"]+')
+
+    page=1
+    while :; do
+        json=$(req - "https://$name.en.uptodown.com/android/apps/$data_code/versions/$page" | jq -r '.data')
+        
+        # Exit if no valid JSON or no more pages
+        [ -z "$json" ] && break
+        
+        # Search for version URL
+        version_url=$(echo "$json" | jq -r --arg version "$version" '[.[] | select(.version == $version and .kindFile == "apk")][0].versionURL // empty')
+        if [ -n "$version_url" ]; then
+            download_url=$(req - "$version_url" | grep -oP '(?<=data-url=")[^"]+')
+            [ -n "$download_url" ] && req "$name-v$version.apk" "https://dw.uptodown.com/dwn/$download_url" && break
+        fi
+        
+        # Check if all versions are less than target version
+        all_lower=$(echo "$json" | jq -r --arg version "$version" '.[] | select(.kindFile == "apk") | .version | select(. < $version)' | wc -l)
+        total_versions=$(echo "$json" | jq -r '.[] | select(.kindFile == "apk") | .version' | wc -l)
+        [ "$all_lower" -eq "$total_versions" ] && break
+
+        page=$((page + 1))
+    done
 }
 
 # Tiktok not work because not available version supported 
