@@ -1,4 +1,3 @@
-
 #!/bin/bash
 # Script make by Mạnh Dương
 
