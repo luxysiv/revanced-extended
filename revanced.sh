@@ -72,4 +72,5 @@ if ! compare_repository_versions "$repo_patches" "$repository"; then
     download_resources
     patch_upload "youtube"
     patch_upload "youtube-music"
+    patch_upload "reddit"
 fi
