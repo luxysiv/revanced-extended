@@ -17,27 +17,6 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@main  
 
-    - name: Cache Data
-      id: cache-pup
-      uses: actions/cache@main
-      with:
-        path: /usr/local/bin/pup
-        key: ${{ runner.os }}-pup
-        restore-keys: ${{ runner.os }}-pup
-
-    - name: Check if pup is installed
-      run: |
-        if [ ! -f /usr/local/bin/pup ]; then
-          echo "pup is not found. Downloading and installing..."
-          wget -q https://github.com/ericchiang/pup/releases/download/v0.4.0/pup_v0.4.0_linux_amd64.zip -O pup.zip
-          unzip pup.zip
-          sudo mv pup /usr/local/bin/
-          chmod +x /usr/local/bin/pup
-          rm pup.zip
-        else
-          echo "pup is already installed, skipping."
-        fi
-
     - name: Patch Revanced
       run: bash revanced.sh
              
