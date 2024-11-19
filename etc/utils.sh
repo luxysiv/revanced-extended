@@ -147,18 +147,21 @@ apkpure() {
 # Apply patches with Include and Exclude Patches
 apply_patches() {   
     name="$1"
-    # Read patches from file
-    mapfile -t lines < ./etc/$name-patches.txt
-
-    # Process patches
-    for line in "${lines[@]}"; do
-        if [[ -n "$line" && ( ${line:0:1} == "+" || ${line:0:1} == "-" ) ]]; then
-            patch_name=$(sed -e 's/^[+|-] *//;s/ *$//' <<< "$line") 
-            [[ ${line:0:1} == "+" ]] && includePatches+=("--include" "$patch_name")
-            [[ ${line:0:1} == "-" ]] && excludePatches+=("--exclude" "$patch_name")
-        fi
-    done
     
+    # Read patches from file if the file exists
+    if [[ -f "./etc/$name-patches.txt" ]]; then
+        mapfile -t lines < ./etc/$name-patches.txt
+
+        # Process patches
+        for line in "${lines[@]}"; do
+            if [[ -n "$line" && ( ${line:0:1} == "+" || ${line:0:1} == "-" ) ]]; then
+                patch_name=$(sed -e 's/^[+|-] *//;s/ *$//' <<< "$line") 
+                [[ ${line:0:1} == "+" ]] && includePatches+=("--include" "$patch_name")
+                [[ ${line:0:1} == "-" ]] && excludePatches+=("--exclude" "$patch_name")
+            fi
+        done
+    fi
+
     # Remove x86 and x86_64 libs
     zip --delete "$name-v$version.apk" "lib/x86/*" "lib/x86_64/*" >/dev/null
     
@@ -169,7 +172,7 @@ apply_patches() {
         "${excludePatches[@]}" "${includePatches[@]}" \
         --out "$name-revanced-extended-v$version.apk" \
         "$name-v$version.apk"
-    rm $name-v$version.apk
+    rm "$name-v$version.apk"
     unset excludePatches includePatches version
 }
 
