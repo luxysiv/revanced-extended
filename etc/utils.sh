@@ -180,10 +180,11 @@ apply_patches() {
 # Upload to Telegram 
 upload_to_telegram() {
     local file_path="$1"
-
-    local response
-    response=$(req - --post-file="$file_path" \
-        "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument?chat_id=${CHAT_ID}")
+    
+    response=$(curl -s -X POST \
+        -F "chat_id=$CHAT_ID" \
+        -F "document=@$file_path" \
+        "https://api.telegram.org/bot$BOT_TOKEN/sendDocument")
 }
 
 # Make body Release 
