@@ -177,16 +177,6 @@ apply_patches() {
     unset excludePatches includePatches version
 }
 
-# Upload to Telegram 
-upload_to_telegram() {
-    local file_path="$1"
-    
-    response=$(curl -s -X POST \
-        -F "chat_id=$CHAT_ID" \
-        -F "document=@$file_path" \
-        "https://api.telegram.org/bot$BOT_TOKEN/sendDocument")
-}
-
 # Make body Release 
 create_body_release() {
     body=$(cat <<EOF
@@ -252,7 +242,4 @@ create_github_release() {
 
     # Upload file to Release 
     req - &>/dev/null --header="$authorization" --post-file="$apkFilePath" "$uploadUrlApk"
-
-    # Upload to Telegram Chanel
-    upload_to_telegram "$apkFilePath"
 }
