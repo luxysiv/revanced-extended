@@ -35,7 +35,7 @@ get_supported_version() {
 
 # Download necessary resources to patch from Github latest release 
 download_resources() {
-    for repo in revanced-patches revanced-cli revanced-integrations; do
+    for repo in revanced-patches revanced-cli; do
         githubApiUrl="https://api.github.com/repos/inotia00/$repo/releases/latest"
         page=$(req - 2>/dev/null $githubApiUrl)
         assetUrls=$(echo $page | jq -r '.assets[] | select(.name | endswith(".asc") | not) | "\(.browser_download_url) \(.name)"')
@@ -168,8 +168,7 @@ apply_patches() {
     
     # Apply patches using Revanced tools
     java -jar revanced-cli*.jar patch \
-        --merge revanced-integrations*.apk \
-        --patch-bundle revanced-patches*.jar \
+        --patches patches*.rvp \
         "${excludePatches[@]}" "${includePatches[@]}" \
         --out "$name-revanced-extended-v$version.apk" \
         "$name-v$version.apk"
@@ -184,7 +183,6 @@ create_body_release() {
 
 ## Build Tools:
 - **ReVanced Patches:** v$patchver
-- **ReVanced Integrations:** v$integrationsver
 - **ReVanced CLI:** v$cliver
 
 ## Note:
@@ -209,8 +207,7 @@ create_github_release() {
     uploadRelease="https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases"
     apkFilePath=$(find . -type f -name "$name-revanced*.apk")
     apkFileName=$(basename "$apkFilePath")
-    patchver=$(ls -1 revanced-patches*.jar | grep -oP '\d+(\.\d+)+')
-    integrationsver=$(ls -1 revanced-integrations*.apk | grep -oP '\d+(\.\d+)+')
+    patchver=$(ls -1 patches*.rvp | grep -oP '\d+(\.\d+)+')
     cliver=$(ls -1 revanced-cli*.jar | grep -oP '\d+(\.\d+)+')
     tagName="v$patchver"
 
