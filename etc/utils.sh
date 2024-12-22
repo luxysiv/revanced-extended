@@ -29,8 +29,10 @@ get_latest_version() {
 
 # Read highest supported versions from Revanced 
 get_supported_version() {
-    pkg_name="$1"
-    jq -r '.. | objects | select(.name == "'$pkg_name'" and .versions != null) | .versions[]' patches.json | max
+    package_name=$1
+    output=$(java -jar revanced-cli*.jar list-versions -f "$package_name" patch*.rvp)
+    version=$(echo "$output" | tail -n +3 | sed 's/ (.*)//' | grep -v -w "Any" | max | xargs)
+    echo "$version"
 }
 
 # Download necessary resources to patch from Github latest release 
