@@ -172,7 +172,7 @@ apply_patches() {
     java -jar revanced-cli*.jar patch \
         --patches patches*.rvp \
         "${excludePatches[@]}" "${includePatches[@]}" \
-        --out "patched-$name-revanced-extended-v$version.apk" \
+        --out "patched-$name-v$version.apk" \
         "$name-v$version.apk"
     rm "$name-v$version.apk"
     unset excludePatches includePatches
