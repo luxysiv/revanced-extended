@@ -175,7 +175,7 @@ apply_patches() {
         --out "patched-$name-revanced-extended-v$version.apk" \
         "$name-v$version.apk"
     rm "$name-v$version.apk"
-    unset excludePatches includePatches version
+    unset excludePatches includePatches
 }
 
 sign_patched_apk() {   
@@ -188,7 +188,7 @@ sign_patched_apk() {
         --ks-pass pass:public \
         --key-pass pass:public \
         --in "patched-$name-v$version.apk" \
-        --out "$name-revanced-v$version.apk"
+        --out "$name-revanced-extended-v$version.apk"
     rm patched-$name-v$version.apk
     unset version
 }
